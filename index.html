@@ -8,46 +8,11 @@
     #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
     #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
     @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
-    
-    /* Тільки для фону та канвасу */
     .bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
     #canvas { z-index: 2; }
-
-    /* Хмарка тексту (вигук) */
-    #wowEffect { 
-        display: none; 
-        position: absolute; 
-        z-index: 10; 
-        width: 45%; 
-        height: auto; 
-        top: 35%; 
-        left: 55%; 
-        transform: translate(-50%, -50%); 
-        pointer-events: none; 
-        animation: buttonPulse 3.5s infinite ease-in-out; 
-    }
-
-    /* Кнопка PNG з пульсацією */
-    #ctaButton { 
-        display: none; 
-        position: absolute; 
-        z-index: 11; 
-        bottom: 15%; 
-        left: 50%; 
-        width: 80%; 
-        height: auto; 
-        transform: translateX(-50%); 
-        cursor: pointer; 
-        animation: buttonPulse 1.8s infinite ease-in-out; 
-    }
-
-    @keyframes buttonPulse {
-        0% { transform: translateX(-50%) scale(1); }
-        50% { transform: translateX(-50%) scale(1.08); }
-        100% { transform: translateX(-50%) scale(1); }
-    }
-
-    /* Губка та туторіал */
+    #wowEffect { display: none; position: absolute; z-index: 10; width: 45%; height: auto; top: 35%; left: 55%; transform: translate(-50%, -50%); pointer-events: none; animation: buttonPulse 3.5s infinite ease-in-out; }
+    #ctaButton { display: none; position: absolute; z-index: 11; bottom: 15%; left: 50%; width: 80%; height: auto; transform: translateX(-50%); cursor: pointer; animation: buttonPulse 1.8s infinite ease-in-out; }
+    @keyframes buttonPulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.08); } 100% { transform: translateX(-50%) scale(1); } }
     #sponge { position: absolute; height: 160px; width: 160px; z-index: 6; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); }
     #outline { position: absolute; height: 130px; width: 130px; z-index: 5; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); animation: outlinePulse 1.1s infinite; }
     @keyframes outlinePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
@@ -62,20 +27,16 @@
         <img src="assets/clean.png" class="bg-img">
         <img src="assets/wow.png" id="wowEffect">
         <img src="assets/button.png" id="ctaButton">
-        
         <canvas id="canvas"></canvas>
-        
         <img src="assets/arrow.png" class="arrow" id="arrowUp">
         <img src="assets/arrow.png" class="arrow" id="arrowDown">
         <img src="assets/arrow.png" class="arrow" id="arrowLeft">
         <img src="assets/arrow.png" class="arrow" id="arrowRight">
-        
         <img src="assets/sponge_outline.png" id="outline">
         <img src="assets/sponge.png" id="sponge">
     </div>
 </div>
 
-<!-- Додано preload="auto" для GitHub -->
 <audio id="bgMusic" src="assets/music.mp3" loop preload="auto"></audio>
 <audio id="soundStart" src="assets/vo_start.mp3" preload="auto"></audio>
 <audio id="soundAlmost" src="assets/vo_almost.mp3" preload="auto"></audio>
@@ -96,48 +57,42 @@ const soundStart = document.getElementById('soundStart');
 const soundAlmost = document.getElementById('soundAlmost');
 const soundFinish = document.getElementById('soundFinish');
 
-let drawing = false, started = false, tutorial = true, finished = false, playedAlmost = false;
-let audioUnlocked = false; // Окремий прапорець для звуку
+let drawing = false, tutorial = true, finished = false, playedAlmost = false;
+let audioUnlocked = false;
 let lastX = null, lastY = null, checkCounter = 0;
 const brush = new Image(); brush.src = 'assets/sponge.png';
 
-/* 1. РОЗБЛОКУВАННЯ ЗВУКУ (для мобільних) */
+// 1. ГОЛОВНЕ РОЗБЛОКУВАННЯ
 function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
-    
-    // "Прогріваємо" всі звуки короткім відтворенням
-    [bgMusic, soundStart, soundAlmost, soundFinish].forEach(sound => {
-        sound.play().then(() => {
-            // Миттєво зупиняємо всі, крім фону та першого вигуку
-            if (sound.id !== 'bgMusic' && sound.id !== 'soundStart') {
-                sound.pause();
-                sound.currentTime = 0;
-            }
-        }).catch(() => {});
-    });
 
+    // Для iOS Safari: "будимо" аудіо-контекст
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+        const context = new AudioContext();
+        if (context.state === 'suspended') context.resume();
+    }
+
+    // Запускаємо фон відразу
     bgMusic.volume = 0.15;
-    bgMusic.play();
+    bgMusic.play().catch(e => console.log("BG error"));
+
+    // "Тихе" розблокування інших файлів
+    [soundAlmost, soundFinish].forEach(s => {
+        s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(e => {});
+    });
 }
 
-/* Примусове завантаження (для GitHub кешу) */
-[soundStart, soundAlmost, soundFinish, bgMusic].forEach(audio => {
-    audio.load();
-});
-
-/* Позиція */
 function getPos(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     return { x: clientX - rect.left, y: clientY - rect.top };
 }
 
-/* Resize */
 function resize() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
     const fog = new Image();
-    fog.crossOrigin = "anonymous";
     fog.src = 'assets/fog.png';
     fog.onload = () => {
         ctx.globalCompositeOperation = 'source-over';
@@ -185,24 +140,18 @@ function getScrubbedPercent() {
     try {
         const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let transparent = 0;
-        // Оптимізований крок для мобільних
         for (let i = 3; i < pixels.length; i += 256) { if (pixels[i] < 150) transparent++; }
         return (transparent / (pixels.length / 256)) * 100;
     } catch(e) { return 0; }
 }
 
 function checkProgress() {
-    if (finished) return; // Не перевіряємо, якщо гра закінчена
+    if (finished) return;
     const percent = getScrubbedPercent();
-    
-    // Другий вигук (50%)
     if (percent >= 50 && percent < 70 && !playedAlmost) {
         playedAlmost = true;
         soundAlmost.volume = 0.8; 
-        // 2. ЗАПОБІГАННЯ НАКЛАДАННЮ (перевірка paused)
-        if (soundAlmost.paused) {
-            soundAlmost.play().catch(()=>{});
-        }
+        soundAlmost.play().catch(e => {});
     }
     if (percent >= 70) finishGame();
 }
@@ -210,25 +159,22 @@ function checkProgress() {
 function finishGame() {
     if (finished) return;
     finished = true;
-
-    // 3. ПРИМУСОВА ЗУПИНКА ПОПЕРЕДНІХ ЗВУКІВ
-    soundStart.pause();
-    soundAlmost.pause();
+    bgMusic.pause(); // Можна залишити фон, якщо хочеш, але для акценту на VO краще притишити
+    soundStart.pause(); soundAlmost.pause();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     sponge.style.display = 'none'; outline.style.display = 'none';
     wowEffect.style.display = 'block'; ctaButton.style.display = 'block';
     
     soundFinish.volume = 0.9; 
-    soundFinish.play().catch(()=>{});
-    
+    soundFinish.play().catch(e => {});
     ctaButton.onclick = () => window.open("https://your-link.com", "_blank");
 }
 
 function startInteraction(clientX, clientY) {
     if (finished) return;
     
-    // ВАЖЛИВО: Розблоковуємо звук при першому дотику
+    // КРИТИЧНО: Викликаємо розблокування в першу ж мілісекунду тапа
     unlockAudio();
 
     const p = getPos(clientX, clientY);
@@ -238,10 +184,7 @@ function startInteraction(clientX, clientY) {
         outline.style.display = 'none';
         
         soundStart.volume = 0.8; 
-        // 2. ЗАПОБІГАННЯ НАКЛАДАННЮ
-        if (soundStart.paused) {
-            soundStart.play().catch(()=>{});
-        }
+        soundStart.play().catch(e => console.log("Start sound blocked"));
     }
     
     drawing = true;
@@ -254,20 +197,24 @@ function moveInteraction(clientX, clientY) {
     const p = getPos(clientX, clientY);
     moveSponge(p.x, p.y);
     erase(p.x, p.y);
-
-    // ПЕРЕВІРКА ПІД ЧАС РУХУ
     checkCounter++;
     if (checkCounter % 10 === 0) checkProgress();
 }
 
 function stopInteraction() {
     drawing = false; lastX = null; lastY = null;
-    // checkProgress тут більше не потрібен
 }
 
-/* Event Listeners */
-canvas.addEventListener('touchstart', e => { e.preventDefault(); startInteraction(e.touches[0].clientX, e.touches[0].clientY); });
-canvas.addEventListener('touchmove', e => { e.preventDefault(); moveInteraction(e.touches[0].clientX, e.touches[0].clientY); });
+canvas.addEventListener('touchstart', e => { 
+    e.preventDefault(); 
+    startInteraction(e.touches[0].clientX, e.touches[0].clientY); 
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => { 
+    e.preventDefault(); 
+    moveInteraction(e.touches[0].clientX, e.touches[0].clientY); 
+}, { passive: false });
+
 canvas.addEventListener('touchend', stopInteraction);
 canvas.addEventListener('mousedown', e => startInteraction(e.clientX, e.clientY));
 window.addEventListener('mousemove', e => moveInteraction(e.clientX, e.clientY));
