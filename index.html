@@ -4,15 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: Arial, sans-serif; }
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; }
     #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
     #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
     @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
+    
     .bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
     #canvas { z-index: 2; }
-    #wowEffect { display: none; position: absolute; z-index: 10; width: 45%; height: auto; top: 35%; left: 55%; transform: translate(-50%, -50%); pointer-events: none; animation: buttonPulse 3.5s infinite ease-in-out; }
-    #ctaButton { display: none; position: absolute; z-index: 11; bottom: 15%; left: 50%; width: 80%; height: auto; transform: translateX(-50%); cursor: pointer; animation: buttonPulse 1.8s infinite ease-in-out; }
-    @keyframes buttonPulse { 0% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.08); } 100% { transform: translateX(-50%) scale(1); } }
+
+    #wowEffect { 
+        display: none; 
+        position: absolute; 
+        z-index: 10; 
+        width: 45%; 
+        height: auto; 
+        top: 35%; 
+        left: 55%; 
+        transform: translate(-50%, -50%); 
+        pointer-events: none; 
+        animation: buttonPulse 3.5s infinite ease-in-out; 
+    }
+
+    #ctaButton { 
+        display: none; 
+        position: absolute; 
+        z-index: 11; 
+        bottom: 15%; 
+        left: 50%; 
+        width: 80%; 
+        height: auto; 
+        transform: translateX(-50%); 
+        cursor: pointer; 
+        animation: buttonPulse 1.8s infinite ease-in-out; 
+    }
+
+    @keyframes buttonPulse {
+        0% { transform: translateX(-50%) scale(1); }
+        50% { transform: translateX(-50%) scale(1.08); }
+        100% { transform: translateX(-50%) scale(1); }
+    }
+
     #sponge { position: absolute; height: 160px; width: 160px; z-index: 6; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); }
     #outline { position: absolute; height: 130px; width: 130px; z-index: 5; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); animation: outlinePulse 1.1s infinite; }
     @keyframes outlinePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
@@ -27,20 +58,23 @@
         <img src="assets/clean.png" class="bg-img">
         <img src="assets/wow.png" id="wowEffect">
         <img src="assets/button.png" id="ctaButton">
+        
         <canvas id="canvas"></canvas>
+        
         <img src="assets/arrow.png" class="arrow" id="arrowUp">
         <img src="assets/arrow.png" class="arrow" id="arrowDown">
         <img src="assets/arrow.png" class="arrow" id="arrowLeft">
         <img src="assets/arrow.png" class="arrow" id="arrowRight">
+        
         <img src="assets/sponge_outline.png" id="outline">
         <img src="assets/sponge.png" id="sponge">
     </div>
 </div>
 
 <audio id="bgMusic" loop playsinline preload="auto" src="assets/music.mp3" type="audio/mpeg"></audio>
-<audio id="soundStart" loop playsinline preload="auto" src="assets/vo_start.mp3" type="audio/mpeg"></audio>
-<audio id="soundAlmost" loop playsinline preload="auto" src="assets/vo_almost.mp3" type="audio/mpeg"></audio>
-<audio id="soundFinish" loop playsinline preload="auto" src="assets/vo_finish.mp3" type="audio/mpeg"></audio>
+<audio id="soundStart" playsinline preload="auto" src="assets/vo_start.mp3" type="audio/mpeg"></audio>
+<audio id="soundAlmost" playsinline preload="auto" src="assets/vo_almost.mp3" type="audio/mpeg"></audio>
+<audio id="soundFinish" playsinline preload="auto" src="assets/vo_finish.mp3" type="audio/mpeg"></audio>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -50,56 +84,29 @@ const wowEffect = document.getElementById('wowEffect');
 const ctaButton = document.getElementById('ctaButton');
 const sponge = document.getElementById('sponge');
 const outline = document.getElementById('outline');
-const arrows = [
-    document.getElementById('arrowUp'),
-    document.getElementById('arrowDown'),
-    document.getElementById('arrowLeft'),
-    document.getElementById('arrowRight')
-];
+const arrows = [document.getElementById('arrowUp'), document.getElementById('arrowDown'), document.getElementById('arrowLeft'), document.getElementById('arrowRight')];
 
 const bgMusic = document.getElementById('bgMusic');
 const soundStart = document.getElementById('soundStart');
 const soundAlmost = document.getElementById('soundAlmost');
 const soundFinish = document.getElementById('soundFinish');
 
-let drawing = false, tutorial = true, finished = false, playedAlmost = false;
-let audioUnlocked = false;
+let drawing = false, started = false, tutorial = true, finished = false, playedAlmost = false;
 let lastX = null, lastY = null, checkCounter = 0;
-const brush = new Image();
-brush.src = 'assets/sponge.png';
+const brush = new Image(); brush.src = 'assets/sponge.png';
 
-function unlockAudio(callback) {
-    if (audioUnlocked) {
-        if (callback) callback();
-        return;
-    }
-    audioUnlocked = true;
-    bgMusic.volume = 0.15;
-    bgMusic.play().catch(() => {});
-
-    const toUnlock = [soundAlmost, soundFinish];
-    const promises = toUnlock.map(audio =>
-        audio.play().then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-        }).catch(() => {})
-    );
-
-    // Тільки після того як браузер відкрив аудіо — запускаємо soundStart
-    Promise.all(promises).then(() => {
-        if (callback) callback();
-    });
-}
-
+/* Позиція */
 function getPos(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     return { x: clientX - rect.left, y: clientY - rect.top };
 }
 
+/* Resize */
 function resize() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
     const fog = new Image();
+    fog.crossOrigin = "anonymous";
     fog.src = 'assets/fog.png';
     fog.onload = () => {
         ctx.globalCompositeOperation = 'source-over';
@@ -107,8 +114,7 @@ function resize() {
     };
     if (!finished) placeTutorial();
 }
-window.addEventListener('resize', resize);
-resize();
+window.addEventListener('resize', resize); resize();
 
 function placeTutorial() {
     const x = canvas.width / 2, y = canvas.height * 0.5;
@@ -121,56 +127,46 @@ function placeTutorial() {
 }
 
 function setArrow(el, x, y, rot) {
-    el.style.left = x + "px";
-    el.style.top = y + "px";
+    el.style.left = x + "px"; el.style.top = y + "px";
     el.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
 }
 
 function moveSponge(x, y) {
-    sponge.style.left = x + "px";
-    sponge.style.top = y + "px";
-    if (tutorial) {
-        outline.style.left = x + "px";
-        outline.style.top = y + "px";
-    }
+    sponge.style.left = x + "px"; sponge.style.top = y + "px";
+    if (tutorial) { outline.style.left = x + "px"; outline.style.top = y + "px"; }
 }
 
 function erase(x, y) {
     ctx.globalCompositeOperation = 'destination-out';
     const size = 135;
     if (lastX !== null) {
-        const dx = x - lastX, dy = y - lastY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx * dx + dy * dy);
         const steps = Math.max(1, Math.floor(dist / 5));
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             ctx.drawImage(brush, (lastX + dx * t) - size / 2, (lastY + dy * t) - size / 2, size, size);
         }
     }
-    lastX = x;
-    lastY = y;
+    lastX = x; lastY = y;
 }
 
 function getScrubbedPercent() {
     try {
         const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let transparent = 0;
-        for (let i = 3; i < pixels.length; i += 256) {
-            if (pixels[i] < 150) transparent++;
-        }
+        for (let i = 3; i < pixels.length; i += 256) { if (pixels[i] < 150) transparent++; }
         return (transparent / (pixels.length / 256)) * 100;
-    } catch(e) {
-        return 0;
-    }
+    } catch(e) { return 0; }
 }
 
 function checkProgress() {
-    if (finished) return;
     const percent = getScrubbedPercent();
-    if (percent >= 50 && percent < 70 && !playedAlmost) {
+    if (percent >= 50 && percent < 70 && !playedAlmost && !finished) {
         playedAlmost = true;
-        soundAlmost.volume = 0.8;
-        soundAlmost.play().catch(() => {});
+        soundAlmost.volume = 0.8; 
+        if (soundAlmost.paused) {
+            soundAlmost.play().catch(()=>{});
+        }
     }
     if (percent >= 70) finishGame();
 }
@@ -178,36 +174,28 @@ function checkProgress() {
 function finishGame() {
     if (finished) return;
     finished = true;
-    bgMusic.pause();
-    soundStart.pause();
-    soundAlmost.pause();
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sponge.style.display = 'none';
-    outline.style.display = 'none';
-    wowEffect.style.display = 'block';
-    ctaButton.style.display = 'block';
-
-    soundFinish.volume = 0.9;
-    soundFinish.play().catch(() => {});
+    sponge.style.display = 'none'; outline.style.display = 'none';
+    wowEffect.style.display = 'block'; ctaButton.style.display = 'block';
+    soundFinish.volume = 0.9; soundFinish.play().catch(()=>{});
     ctaButton.onclick = () => window.open("https://your-link.com", "_blank");
 }
 
 function startInteraction(clientX, clientY) {
     if (finished) return;
-
     const p = getPos(clientX, clientY);
-
     if (tutorial) {
         tutorial = false;
         arrows.forEach(a => a.style.display = 'none');
         outline.style.display = 'none';
-        // soundStart НЕ тут — він запускається з callback в unlockAudio
+        soundStart.volume = 0.8; soundStart.play().catch(()=>{});
     }
-
+    if (!started) {
+        started = true;
+        bgMusic.volume = 0.15; bgMusic.play().catch(()=>{});
+    }
     drawing = true;
-    lastX = p.x;
-    lastY = p.y;
+    lastX = p.x; lastY = p.y;
     moveSponge(p.x, p.y);
 }
 
@@ -216,56 +204,20 @@ function moveInteraction(clientX, clientY) {
     const p = getPos(clientX, clientY);
     moveSponge(p.x, p.y);
     erase(p.x, p.y);
+
     checkCounter++;
     if (checkCounter % 10 === 0) checkProgress();
 }
 
 function stopInteraction() {
-    drawing = false;
-    lastX = null;
-    lastY = null;
+    drawing = false; lastX = null; lastY = null;
 }
 
-// --- Touch events ---
-canvas.addEventListener('touchstart', e => {
-    e.preventDefault();
-
-    const clientX = e.touches[0].clientX;
-    const clientY = e.touches[0].clientY;
-    const wasTutorial = tutorial; // фіксуємо ДО startInteraction
-
-    // Спочатку розблоковуємо аудіо, і тільки потім (у callback) граємо soundStart
-    unlockAudio(() => {
-        if (wasTutorial) {
-            soundStart.currentTime = 0;
-            soundStart.volume = 0.8;
-            soundStart.play().catch(() => {});
-        }
-    });
-
-    startInteraction(clientX, clientY);
-}, { passive: false });
-
-canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
-}, { passive: false });
-
+/* Event Listeners */
+canvas.addEventListener('touchstart', e => { e.preventDefault(); startInteraction(e.touches[0].clientX, e.touches[0].clientY); });
+canvas.addEventListener('touchmove', e => { e.preventDefault(); moveInteraction(e.touches[0].clientX, e.touches[0].clientY); });
 canvas.addEventListener('touchend', stopInteraction);
-
-// --- Mouse events ---
-canvas.addEventListener('mousedown', e => {
-    const wasTutorial = tutorial;
-    unlockAudio(() => {
-        if (wasTutorial) {
-            soundStart.currentTime = 0;
-            soundStart.volume = 0.8;
-            soundStart.play().catch(() => {});
-        }
-    });
-    startInteraction(e.clientX, e.clientY);
-});
-
+canvas.addEventListener('mousedown', e => startInteraction(e.clientX, e.clientY));
 window.addEventListener('mousemove', e => moveInteraction(e.clientX, e.clientY));
 window.addEventListener('mouseup', stopInteraction);
 </script>
