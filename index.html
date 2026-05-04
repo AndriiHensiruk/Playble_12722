@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; }
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: Arial, sans-serif; }
     #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
     #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
     @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
@@ -75,10 +75,11 @@
     </div>
 </div>
 
-<audio id="bgMusic" src="assets/music.mp3" loop></audio>
-<audio id="soundStart" src="assets/vo_start.mp3"></audio>
-<audio id="soundAlmost" src="assets/vo_almost.mp3"></audio>
-<audio id="soundFinish" src="assets/vo_finish.mp3"></audio>
+<!-- Додано preload="auto" для GitHub -->
+<audio id="bgMusic" src="assets/music.mp3" loop preload="auto"></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" preload="auto"></audio>
+<audio id="soundAlmost" src="assets/vo_almost.mp3" preload="auto"></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" preload="auto"></audio>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -96,8 +97,34 @@ const soundAlmost = document.getElementById('soundAlmost');
 const soundFinish = document.getElementById('soundFinish');
 
 let drawing = false, started = false, tutorial = true, finished = false, playedAlmost = false;
+let audioUnlocked = false; // Окремий прапорець для звуку
 let lastX = null, lastY = null, checkCounter = 0;
 const brush = new Image(); brush.src = 'assets/sponge.png';
+
+/* 1. РОЗБЛОКУВАННЯ ЗВУКУ (для мобільних) */
+function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    
+    // "Прогріваємо" всі звуки короткім відтворенням
+    [bgMusic, soundStart, soundAlmost, soundFinish].forEach(sound => {
+        sound.play().then(() => {
+            // Миттєво зупиняємо всі, крім фону та першого вигуку
+            if (sound.id !== 'bgMusic' && sound.id !== 'soundStart') {
+                sound.pause();
+                sound.currentTime = 0;
+            }
+        }).catch(() => {});
+    });
+
+    bgMusic.volume = 0.15;
+    bgMusic.play();
+}
+
+/* Примусове завантаження (для GitHub кешу) */
+[soundStart, soundAlmost, soundFinish, bgMusic].forEach(audio => {
+    audio.load();
+});
 
 /* Позиція */
 function getPos(clientX, clientY) {
@@ -158,16 +185,21 @@ function getScrubbedPercent() {
     try {
         const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let transparent = 0;
+        // Оптимізований крок для мобільних
         for (let i = 3; i < pixels.length; i += 256) { if (pixels[i] < 150) transparent++; }
         return (transparent / (pixels.length / 256)) * 100;
     } catch(e) { return 0; }
 }
 
 function checkProgress() {
+    if (finished) return; // Не перевіряємо, якщо гра закінчена
     const percent = getScrubbedPercent();
-    if (percent >= 50 && percent < 70 && !playedAlmost && !finished) {
+    
+    // Другий вигук (50%)
+    if (percent >= 50 && percent < 70 && !playedAlmost) {
         playedAlmost = true;
         soundAlmost.volume = 0.8; 
+        // 2. ЗАПОБІГАННЯ НАКЛАДАННЮ (перевірка paused)
         if (soundAlmost.paused) {
             soundAlmost.play().catch(()=>{});
         }
@@ -178,26 +210,40 @@ function checkProgress() {
 function finishGame() {
     if (finished) return;
     finished = true;
+
+    // 3. ПРИМУСОВА ЗУПИНКА ПОПЕРЕДНІХ ЗВУКІВ
+    soundStart.pause();
+    soundAlmost.pause();
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     sponge.style.display = 'none'; outline.style.display = 'none';
     wowEffect.style.display = 'block'; ctaButton.style.display = 'block';
-    soundFinish.volume = 0.9; soundFinish.play().catch(()=>{});
+    
+    soundFinish.volume = 0.9; 
+    soundFinish.play().catch(()=>{});
+    
     ctaButton.onclick = () => window.open("https://your-link.com", "_blank");
 }
 
 function startInteraction(clientX, clientY) {
     if (finished) return;
+    
+    // ВАЖЛИВО: Розблоковуємо звук при першому дотику
+    unlockAudio();
+
     const p = getPos(clientX, clientY);
     if (tutorial) {
         tutorial = false;
         arrows.forEach(a => a.style.display = 'none');
         outline.style.display = 'none';
-        soundStart.volume = 0.8; soundStart.play().catch(()=>{});
+        
+        soundStart.volume = 0.8; 
+        // 2. ЗАПОБІГАННЯ НАКЛАДАННЮ
+        if (soundStart.paused) {
+            soundStart.play().catch(()=>{});
+        }
     }
-    if (!started) {
-        started = true;
-        bgMusic.volume = 0.15; bgMusic.play().catch(()=>{});
-    }
+    
     drawing = true;
     lastX = p.x; lastY = p.y;
     moveSponge(p.x, p.y);
@@ -209,12 +255,14 @@ function moveInteraction(clientX, clientY) {
     moveSponge(p.x, p.y);
     erase(p.x, p.y);
 
+    // ПЕРЕВІРКА ПІД ЧАС РУХУ
     checkCounter++;
     if (checkCounter % 10 === 0) checkProgress();
 }
 
 function stopInteraction() {
     drawing = false; lastX = null; lastY = null;
+    // checkProgress тут більше не потрібен
 }
 
 /* Event Listeners */
