@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Pkyable_12722</title>
 <style>
     html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
     #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
@@ -41,20 +42,19 @@
 
 <div id="wrapper">
     <div id="container">
-        <img src="assets/clean.png" class="bg-img">
-        <img src="assets/wow.png" id="wowEffect">
-        <img src="assets/button.png" id="ctaButton">
+        <img src="assets/clean.webp" class="bg-img">
+        <img src="assets/wow.webp" id="wowEffect">
+        <img src="assets/button.webp" id="ctaButton">
         <canvas id="canvas"></canvas>
-        <img src="assets/arrow.png" class="arrow" id="arrowUp">
-        <img src="assets/arrow.png" class="arrow" id="arrowDown">
-        <img src="assets/arrow.png" class="arrow" id="arrowLeft">
-        <img src="assets/arrow.png" class="arrow" id="arrowRight">
-        <img src="assets/sponge_outline.png" id="outline">
-        <img src="assets/sponge.png" id="sponge">
+        <img src="assets/arrow.webp" class="arrow" id="arrowUp">
+        <img src="assets/arrow.webp" class="arrow" id="arrowDown">
+        <img src="assets/arrow.webp" class="arrow" id="arrowLeft">
+        <img src="assets/arrow.webp" class="arrow" id="arrowRight">
+        <img src="assets/sponge_outline.webp" id="outline">
+        <img src="assets/sponge.webp" id="sponge">
     </div>
 </div>
 
-<!-- Прибрано muted, додано playsinline для мобілок -->
 <audio id="bgMusic" src="assets/music.mp3" loop playsinline preload="auto"></audio>
 <audio id="soundStart" src="assets/vo_start.mp3" playsinline preload="auto"></audio>
 <audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline preload="auto"></audio>
@@ -77,24 +77,20 @@ const soundFinish = document.getElementById('soundFinish');
 
 let drawing = false, audioUnlocked = false, tutorial = true, finished = false, playedAlmost = false;
 let lastX = null, lastY = null, checkCounter = 0;
-const brush = new Image(); brush.src = 'assets/sponge.png';
+const brush = new Image(); brush.src = 'assets/sponge.webp';
 
-// ФУНКЦІЯ РОЗБЛОКУВАННЯ (Як у другому плейблі)
 function unlockAudio() {
     if (audioUnlocked) return;
     
-    // Пробуджуємо AudioContext для iOS
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (AudioContext) {
         const context = new AudioContext();
         if (context.state === 'suspended') context.resume();
     }
 
-    // Прогріваємо фонову музику
     bgMusic.volume = 0.15;
     bgMusic.play().catch(() => {});
 
-    // Прогріваємо ефекти порожнім запуском
     [soundAlmost, soundFinish].forEach(s => {
         s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(() => {});
     });
@@ -111,7 +107,7 @@ function resize() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
     const fog = new Image();
-    fog.src = 'assets/fog.png';
+    fog.src = 'assets/fog.webp';
     fog.onload = () => {
         ctx.globalCompositeOperation = 'source-over';
         ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
@@ -188,7 +184,6 @@ function finishGame() {
 function startInteraction(clientX, clientY) {
     if (finished) return;
     
-    // РОЗБЛОКУВАННЯ ПРИ ПЕРШОМУ ТАПІ
     unlockAudio();
 
     const p = getPos(clientX, clientY);
