@@ -37,10 +37,10 @@
     </div>
 </div>
 
-<audio id="bgMusic" src="assets/music.mp3" loop preload="auto"></audio>
-<audio id="soundStart" src="assets/vo_start.mp3" preload="auto"></audio>
-<audio id="soundAlmost" src="assets/vo_almost.mp3" preload="auto"></audio>
-<audio id="soundFinish" src="assets/vo_finish.mp3" preload="auto"></audio>
+<audio id="bgMusic" loop playsinline preload="auto" src="assets/music.mp3" type="audio/mpeg"></audio>
+<audio id="soundStart" loop playsinline preload="auto" src="assets/vo_start.mp3" type="audio/mpeg"></audio>
+<audio id="soundAlmost" loop playsinline preload="auto" src="assets/vo_almost.mp3" type="audio/mpeg"></audio>
+<audio id="soundFinish" loop playsinline preload="auto" src="assets/vo_finish.mp3" type="audio/mpeg"></audio>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -68,21 +68,15 @@ let lastX = null, lastY = null, checkCounter = 0;
 const brush = new Image();
 brush.src = 'assets/sponge.png';
 
-// Розблоковує аудіо на мобільних браузерах.
-// callback викликається після розблокування — використовується для soundStart,
-// щоб уникнути конфлікту між .play() в циклі розблокування і .play() зі стартом.
 function unlockAudio(callback) {
     if (audioUnlocked) {
         if (callback) callback();
         return;
     }
     audioUnlocked = true;
-
-    // Фонова музика стартує одразу
     bgMusic.volume = 0.15;
     bgMusic.play().catch(() => {});
 
-    // Розблоковуємо almost і finish — але НЕ soundStart (він у callback)
     const toUnlock = [soundAlmost, soundFinish];
     const promises = toUnlock.map(audio =>
         audio.play().then(() => {
