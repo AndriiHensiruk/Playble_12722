@@ -50,7 +50,12 @@ const wowEffect = document.getElementById('wowEffect');
 const ctaButton = document.getElementById('ctaButton');
 const sponge = document.getElementById('sponge');
 const outline = document.getElementById('outline');
-const arrows = [document.getElementById('arrowUp'), document.getElementById('arrowDown'), document.getElementById('arrowLeft'), document.getElementById('arrowRight')];
+const arrows = [
+    document.getElementById('arrowUp'),
+    document.getElementById('arrowDown'),
+    document.getElementById('arrowLeft'),
+    document.getElementById('arrowRight')
+];
 
 const bgMusic = document.getElementById('bgMusic');
 const soundStart = document.getElementById('soundStart');
@@ -60,23 +65,36 @@ const soundFinish = document.getElementById('soundFinish');
 let drawing = false, tutorial = true, finished = false, playedAlmost = false;
 let audioUnlocked = false;
 let lastX = null, lastY = null, checkCounter = 0;
-const brush = new Image(); brush.src = 'assets/sponge.png';
+const brush = new Image();
+brush.src = 'assets/sponge.png';
 
-function unlockAudio() {
-    if (audioUnlocked) return;
+// Розблоковує аудіо на мобільних браузерах.
+// callback викликається після розблокування — використовується для soundStart,
+// щоб уникнути конфлікту між .play() в циклі розблокування і .play() зі стартом.
+function unlockAudio(callback) {
+    if (audioUnlocked) {
+        if (callback) callback();
+        return;
+    }
     audioUnlocked = true;
 
-    // Грати і одразу зупинити всі звуки — розблоковує їх для майбутніх викликів
-    [bgMusic, soundStart, soundAlmost, soundFinish].forEach(audio => {
-        audio.play().then(() => {
-            if (audio !== bgMusic) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
-        }).catch(() => {});
-    });
-
+    // Фонова музика стартує одразу
     bgMusic.volume = 0.15;
+    bgMusic.play().catch(() => {});
+
+    // Розблоковуємо almost і finish — але НЕ soundStart (він у callback)
+    const toUnlock = [soundAlmost, soundFinish];
+    const promises = toUnlock.map(audio =>
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+        }).catch(() => {})
+    );
+
+    // Тільки після того як браузер відкрив аудіо — запускаємо soundStart
+    Promise.all(promises).then(() => {
+        if (callback) callback();
+    });
 }
 
 function getPos(clientX, clientY) {
@@ -95,7 +113,8 @@ function resize() {
     };
     if (!finished) placeTutorial();
 }
-window.addEventListener('resize', resize); resize();
+window.addEventListener('resize', resize);
+resize();
 
 function placeTutorial() {
     const x = canvas.width / 2, y = canvas.height * 0.5;
@@ -108,36 +127,47 @@ function placeTutorial() {
 }
 
 function setArrow(el, x, y, rot) {
-    el.style.left = x + "px"; el.style.top = y + "px";
+    el.style.left = x + "px";
+    el.style.top = y + "px";
     el.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
 }
 
 function moveSponge(x, y) {
-    sponge.style.left = x + "px"; sponge.style.top = y + "px";
-    if (tutorial) { outline.style.left = x + "px"; outline.style.top = y + "px"; }
+    sponge.style.left = x + "px";
+    sponge.style.top = y + "px";
+    if (tutorial) {
+        outline.style.left = x + "px";
+        outline.style.top = y + "px";
+    }
 }
 
 function erase(x, y) {
     ctx.globalCompositeOperation = 'destination-out';
     const size = 135;
     if (lastX !== null) {
-        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx * dx + dy * dy);
+        const dx = x - lastX, dy = y - lastY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
         const steps = Math.max(1, Math.floor(dist / 5));
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             ctx.drawImage(brush, (lastX + dx * t) - size / 2, (lastY + dy * t) - size / 2, size, size);
         }
     }
-    lastX = x; lastY = y;
+    lastX = x;
+    lastY = y;
 }
 
 function getScrubbedPercent() {
     try {
         const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let transparent = 0;
-        for (let i = 3; i < pixels.length; i += 256) { if (pixels[i] < 150) transparent++; }
+        for (let i = 3; i < pixels.length; i += 256) {
+            if (pixels[i] < 150) transparent++;
+        }
         return (transparent / (pixels.length / 256)) * 100;
-    } catch(e) { return 0; }
+    } catch(e) {
+        return 0;
+    }
 }
 
 function checkProgress() {
@@ -145,8 +175,8 @@ function checkProgress() {
     const percent = getScrubbedPercent();
     if (percent >= 50 && percent < 70 && !playedAlmost) {
         playedAlmost = true;
-        soundAlmost.volume = 0.8; 
-        soundAlmost.play().catch(e => {});
+        soundAlmost.volume = 0.8;
+        soundAlmost.play().catch(() => {});
     }
     if (percent >= 70) finishGame();
 }
@@ -154,15 +184,18 @@ function checkProgress() {
 function finishGame() {
     if (finished) return;
     finished = true;
-    bgMusic.pause(); // Можна залишити фон, якщо хочеш, але для акценту на VO краще притишити
-    soundStart.pause(); soundAlmost.pause();
+    bgMusic.pause();
+    soundStart.pause();
+    soundAlmost.pause();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sponge.style.display = 'none'; outline.style.display = 'none';
-    wowEffect.style.display = 'block'; ctaButton.style.display = 'block';
-    
-    soundFinish.volume = 0.9; 
-    soundFinish.play().catch(e => {});
+    sponge.style.display = 'none';
+    outline.style.display = 'none';
+    wowEffect.style.display = 'block';
+    ctaButton.style.display = 'block';
+
+    soundFinish.volume = 0.9;
+    soundFinish.play().catch(() => {});
     ctaButton.onclick = () => window.open("https://your-link.com", "_blank");
 }
 
@@ -170,17 +203,17 @@ function startInteraction(clientX, clientY) {
     if (finished) return;
 
     const p = getPos(clientX, clientY);
+
     if (tutorial) {
         tutorial = false;
         arrows.forEach(a => a.style.display = 'none');
         outline.style.display = 'none';
-        
-        soundStart.volume = 0.8; 
-        soundStart.play().catch(e => console.log("Start sound blocked"));
+        // soundStart НЕ тут — він запускається з callback в unlockAudio
     }
-    
+
     drawing = true;
-    lastX = p.x; lastY = p.y;
+    lastX = p.x;
+    lastY = p.y;
     moveSponge(p.x, p.y);
 }
 
@@ -194,23 +227,51 @@ function moveInteraction(clientX, clientY) {
 }
 
 function stopInteraction() {
-    drawing = false; lastX = null; lastY = null;
+    drawing = false;
+    lastX = null;
+    lastY = null;
 }
 
-canvas.addEventListener('touchstart', e => { 
-    e.preventDefault(); 
-    unlockAudio();
-    startInteraction(e.touches[0].clientX, e.touches[0].clientY); 
-    
+// --- Touch events ---
+canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+
+    const clientX = e.touches[0].clientX;
+    const clientY = e.touches[0].clientY;
+    const wasTutorial = tutorial; // фіксуємо ДО startInteraction
+
+    // Спочатку розблоковуємо аудіо, і тільки потім (у callback) граємо soundStart
+    unlockAudio(() => {
+        if (wasTutorial) {
+            soundStart.currentTime = 0;
+            soundStart.volume = 0.8;
+            soundStart.play().catch(() => {});
+        }
+    });
+
+    startInteraction(clientX, clientY);
 }, { passive: false });
 
-canvas.addEventListener('touchmove', e => { 
-    e.preventDefault(); 
-    moveInteraction(e.touches[0].clientX, e.touches[0].clientY); 
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    moveInteraction(e.touches[0].clientX, e.touches[0].clientY);
 }, { passive: false });
 
 canvas.addEventListener('touchend', stopInteraction);
-canvas.addEventListener('mousedown', e => startInteraction(e.clientX, e.clientY));
+
+// --- Mouse events ---
+canvas.addEventListener('mousedown', e => {
+    const wasTutorial = tutorial;
+    unlockAudio(() => {
+        if (wasTutorial) {
+            soundStart.currentTime = 0;
+            soundStart.volume = 0.8;
+            soundStart.play().catch(() => {});
+        }
+    });
+    startInteraction(e.clientX, e.clientY);
+});
+
 window.addEventListener('mousemove', e => moveInteraction(e.clientX, e.clientY));
 window.addEventListener('mouseup', stopInteraction);
 </script>
