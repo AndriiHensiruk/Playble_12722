@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<style>
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; }
+    #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
+    #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
+    @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
+    
+    /* Тільки для фону та канвасу */
+    .bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
+    #canvas { z-index: 2; }
+
+    /* Хмарка тексту (вигук) */
+    #wowEffect { 
+        display: none; 
+        position: absolute; 
+        z-index: 10; 
+        width: 45%; 
+        height: auto; 
+        top: 35%; 
+        left: 55%; 
+        transform: translate(-50%, -50%); 
+        pointer-events: none; 
+        animation: buttonPulse 3.5s infinite ease-in-out; 
+    }
+
+    /* Кнопка PNG з пульсацією */
+    #ctaButton { 
+        display: none; 
+        position: absolute; 
+        z-index: 11; 
+        bottom: 15%; 
+        left: 50%; 
+        width: 80%; 
+        height: auto; 
+        transform: translateX(-50%); 
+        cursor: pointer; 
+        animation: buttonPulse 1.8s infinite ease-in-out; 
+    }
+
+    @keyframes buttonPulse {
+        0% { transform: translateX(-50%) scale(1); }
+        50% { transform: translateX(-50%) scale(1.08); }
+        100% { transform: translateX(-50%) scale(1); }
+    }
+
+    /* Губка та туторіал */
+    #sponge { position: absolute; height: 160px; width: 160px; z-index: 6; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); }
+    #outline { position: absolute; height: 130px; width: 130px; z-index: 5; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); animation: outlinePulse 1.1s infinite; }
+    @keyframes outlinePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    .arrow { position: absolute; height: 60px; width: 60px; z-index: 4; animation: arrowFade 1.2s infinite; transform: translate(-50%, -50%); }
+    @keyframes arrowFade { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div id="wrapper">
+    <div id="container">
+        <img src="assets/clean.png" class="bg-img">
+        <img src="assets/wow.png" id="wowEffect">
+        <img src="assets/button.png" id="ctaButton">
+        
+        <canvas id="canvas"></canvas>
+        
+        <img src="assets/arrow.png" class="arrow" id="arrowUp">
+        <img src="assets/arrow.png" class="arrow" id="arrowDown">
+        <img src="assets/arrow.png" class="arrow" id="arrowLeft">
+        <img src="assets/arrow.png" class="arrow" id="arrowRight">
+        
+        <img src="assets/sponge_outline.png" id="outline">
+        <img src="assets/sponge.png" id="sponge">
+    </div>
+</div>
+
+<audio id="bgMusic" src="assets/music.mp3" loop></audio>
+<audio id="soundStart" src="assets/vo_start.mp3"></audio>
+<audio id="soundAlmost" src="assets/vo_almost.mp3"></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3"></audio>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const container = document.getElementById('container');
+const wowEffect = document.getElementById('wowEffect');
+const ctaButton = document.getElementById('ctaButton');
+const sponge = document.getElementById('sponge');
+const outline = document.getElementById('outline');
+const arrows = [document.getElementById('arrowUp'), document.getElementById('arrowDown'), document.getElementById('arrowLeft'), document.getElementById('arrowRight')];
+
+const bgMusic = document.getElementById('bgMusic');
+const soundStart = document.getElementById('soundStart');
+const soundAlmost = document.getElementById('soundAlmost');
+const soundFinish = document.getElementById('soundFinish');
+
+let drawing = false, started = false, tutorial = true, finished = false, playedAlmost = false;
+let lastX = null, lastY = null, checkCounter = 0;
+const brush = new Image(); brush.src = 'assets/sponge.png';
+
+/* Позиція */
+function getPos(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+/* Resize */
+function resize() {
+    canvas.width = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+    const fog = new Image();
+    fog.crossOrigin = "anonymous";
+    fog.src = 'assets/fog.png';
+    fog.onload = () => {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
+    };
+    if (!finished) placeTutorial();
+}
+window.addEventListener('resize', resize); resize();
+
+function placeTutorial() {
+    const x = canvas.width / 2, y = canvas.height * 0.5;
+    moveSponge(x, y);
+    const gap = 160;
+    setArrow(arrows[0], x, y - gap, 0);
+    setArrow(arrows[1], x, y + gap, 180);
+    setArrow(arrows[2], x - gap, y, -90);
+    setArrow(arrows[3], x + gap, y, 90);
+}
+
+function setArrow(el, x, y, rot) {
+    el.style.left = x + "px"; el.style.top = y + "px";
+    el.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+}
+
+function moveSponge(x, y) {
+    sponge.style.left = x + "px"; sponge.style.top = y + "px";
+    if (tutorial) { outline.style.left = x + "px"; outline.style.top = y + "px"; }
+}
+
+function erase(x, y) {
+    ctx.globalCompositeOperation = 'destination-out';
+    const size = 135;
+    if (lastX !== null) {
+        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx * dx + dy * dy);
+        const steps = Math.max(1, Math.floor(dist / 5));
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            ctx.drawImage(brush, (lastX + dx * t) - size / 2, (lastY + dy * t) - size / 2, size, size);
+        }
+    }
+    lastX = x; lastY = y;
+}
+
+function getScrubbedPercent() {
+    try {
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let transparent = 0;
+        for (let i = 3; i < pixels.length; i += 256) { if (pixels[i] < 150) transparent++; }
+        return (transparent / (pixels.length / 256)) * 100;
+    } catch(e) { return 0; }
+}
+
+function checkProgress() {
+    const percent = getScrubbedPercent();
+    if (percent >= 50 && percent < 70 && !playedAlmost && !finished) {
+        playedAlmost = true;
+        soundAlmost.volume = 0.8; soundAlmost.play().catch(()=>{});
+    }
+    if (percent >= 70) finishGame();
+}
+
+function finishGame() {
+    if (finished) return;
+    finished = true;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    sponge.style.display = 'none'; outline.style.display = 'none';
+    wowEffect.style.display = 'block'; ctaButton.style.display = 'block';
+    soundFinish.volume = 0.9; soundFinish.play().catch(()=>{});
+    ctaButton.onclick = () => window.open("https://your-link.com", "_blank");
+}
+
+function startInteraction(clientX, clientY) {
+    if (finished) return;
+    const p = getPos(clientX, clientY);
+    if (tutorial) {
+        tutorial = false;
+        arrows.forEach(a => a.style.display = 'none');
+        outline.style.display = 'none';
+        soundStart.volume = 0.8; soundStart.play().catch(()=>{});
+    }
+    if (!started) {
+        started = true;
+        bgMusic.volume = 0.15; bgMusic.play().catch(()=>{});
+    }
+    drawing = true;
+    lastX = p.x; lastY = p.y;
+    moveSponge(p.x, p.y);
+}
+
+function moveInteraction(clientX, clientY) {
+    if (!drawing || finished) return;
+    const p = getPos(clientX, clientY);
+    moveSponge(p.x, p.y);
+    erase(p.x, p.y);
+
+    checkCounter++;
+    if (checkCounter % 10 === 0) checkProgress();
+}
+
+function stopInteraction() {
+    drawing = false; lastX = null; lastY = null;
+}
+
+/* Event Listeners */
+canvas.addEventListener('touchstart', e => { e.preventDefault(); startInteraction(e.touches[0].clientX, e.touches[0].clientY); });
+canvas.addEventListener('touchmove', e => { e.preventDefault(); moveInteraction(e.touches[0].clientX, e.touches[0].clientY); });
+canvas.addEventListener('touchend', stopInteraction);
+canvas.addEventListener('mousedown', e => startInteraction(e.clientX, e.clientY));
+window.addEventListener('mousemove', e => moveInteraction(e.clientX, e.clientY));
+window.addEventListener('mouseup', stopInteraction);
+</script>
+</body>
+</html>
