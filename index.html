@@ -62,26 +62,21 @@ let audioUnlocked = false;
 let lastX = null, lastY = null, checkCounter = 0;
 const brush = new Image(); brush.src = 'assets/sponge.png';
 
-// 1. ГОЛОВНЕ РОЗБЛОКУВАННЯ
 function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
 
-    // Для iOS Safari: "будимо" аудіо-контекст
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-        const context = new AudioContext();
-        if (context.state === 'suspended') context.resume();
-    }
-
-    // Запускаємо фон відразу
-    bgMusic.volume = 0.15;
-    bgMusic.play().catch(e => console.log("BG error"));
-
-    // "Тихе" розблокування інших файлів
-    [soundAlmost, soundFinish].forEach(s => {
-        s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(e => {});
+    // Грати і одразу зупинити всі звуки — розблоковує їх для майбутніх викликів
+    [bgMusic, soundStart, soundAlmost, soundFinish].forEach(audio => {
+        audio.play().then(() => {
+            if (audio !== bgMusic) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }).catch(() => {});
     });
+
+    bgMusic.volume = 0.15;
 }
 
 function getPos(clientX, clientY) {
@@ -173,9 +168,6 @@ function finishGame() {
 
 function startInteraction(clientX, clientY) {
     if (finished) return;
-    
-    // КРИТИЧНО: Викликаємо розблокування в першу ж мілісекунду тапа
-    unlockAudio();
 
     const p = getPos(clientX, clientY);
     if (tutorial) {
@@ -207,7 +199,9 @@ function stopInteraction() {
 
 canvas.addEventListener('touchstart', e => { 
     e.preventDefault(); 
+    unlockAudio();
     startInteraction(e.touches[0].clientX, e.touches[0].clientY); 
+    
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => { 
