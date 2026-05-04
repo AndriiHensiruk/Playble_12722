@@ -167,7 +167,10 @@ function checkProgress() {
     const percent = getScrubbedPercent();
     if (percent >= 50 && percent < 70 && !playedAlmost && !finished) {
         playedAlmost = true;
-        soundAlmost.volume = 0.8; soundAlmost.play().catch(()=>{});
+        soundAlmost.volume = 0.8; 
+        if (soundAlmost.paused) {
+            soundAlmost.play().catch(()=>{});
+        }
     }
     if (percent >= 70) finishGame();
 }
