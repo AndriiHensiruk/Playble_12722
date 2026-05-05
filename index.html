@@ -73,7 +73,7 @@
     </div>
 </div>
 
-<audio id="bgMusic" src="assets/music.mp3" loop playsinline preload="auto"></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
 <audio id="soundStart" src="assets/vo_start.mp3" playsinline preload="auto"></audio>
 <audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline preload="auto"></audio>
 <audio id="soundFinish" src="assets/vo_finish.mp3" playsinline preload="auto"></audio>
@@ -235,18 +235,28 @@ function finishGame() {
 function startInteraction(clientX, clientY) {
     if (finished) return;
     
-    unlockAudio();
+    if (!audioUnlocked) {
+        bgMusic.volume = 0.2; // Встановлюємо гучність
+        bgMusic.play().catch(error => {
+            console.log("Помилка відтворення:", error);
+        });
+        audioUnlocked = true;
+    }
 
     const p = getPos(clientX, clientY);
+
     if (tutorial) {
         tutorial = false;
         arrows.forEach(a => a.style.display = 'none');
-        outline.style.display = 'none';
-        soundStart.volume = 0.8;
+        if (outline) outline.style.display = 'none';
+        
+        // Можна також запустити звук "старту"
         soundStart.play().catch(() => {});
     }
+
     drawing = true;
-    lastX = p.x; lastY = p.y;
+    lastX = p.x;
+    lastY = p.y;
     moveSponge(p.x, p.y);
 }
 
