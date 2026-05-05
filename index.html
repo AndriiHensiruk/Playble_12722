@@ -106,6 +106,8 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
 const brush = new Image(); brush.src = 'assets/sponge.webp';
+const soundScrub = document.getElementById('soundScrub');
+soundScrub.volume = 0.3;
 
 let drawing = false, isMuted = false, gameActive = false, playedAlmost = false, finished = false;
 let lastX = null, lastY = null;
@@ -114,6 +116,25 @@ let currentX = 0, currentY = 0;
 function startGame() {
     if (gameActive) return;
     gameActive = true;
+
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.volume = 0.2;
+    bgMusic.play().catch(e => console.warn('bgMusic blocked:', e));
+
+    if (!isMuted) {
+        document.getElementById('soundStart').play().catch(e => console.warn('soundStart blocked:', e));
+    }
+
+    ['soundAlmost', 'soundFinish', 'soundScrub'].forEach(id => {
+        const el = document.getElementById(id);
+        el.muted = true;
+        el.play().then(() => {
+            el.pause();
+            el.currentTime = 0;
+            el.muted = false;
+        }).catch(() => {});
+    });
+
     currentX = canvas.width / 2;
     currentY = canvas.height / 2;
     const gSponge = document.getElementById('sponge');
@@ -127,25 +148,15 @@ function startGame() {
         gSponge.style.display = 'block';
     }, 500);
 
-    // Звук та відео
-    document.getElementById('bgAnimation').play();
-    const bgMusic = document.getElementById('bgMusic');
-    bgMusic.volume = 0.2;
-    bgMusic.play();
-    
-    if(!isMuted) document.getElementById('soundStart').play();
-
     const video = document.getElementById('bgAnimation');
     video.style.transition = "transform 2s ease-out, filter 1s ease";
-    video.style.transform = "scale(1.1)"; // Легке наближення при старті
-    video.play();
+    video.style.transform = "scale(1.1)";
+    video.play().catch(e => console.warn('video blocked:', e));
 }
-
-document.getElementById('splash').addEventListener('pointerdown', startGame);
 
 function handleMove(x, y) {
     if (!gameActive || finished) return;
-    
+
     currentX = x; currentY = y;
     const gSponge = document.getElementById('sponge');
     gSponge.style.left = x + 'px';
@@ -154,6 +165,9 @@ function handleMove(x, y) {
     if (!drawing) return;
 
     ctx.globalCompositeOperation = 'destination-out';
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = 'black';
+
     if (lastX !== null) {
         const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
         const steps = Math.max(1, Math.floor(dist / 5));
@@ -162,26 +176,13 @@ function handleMove(x, y) {
             ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
         }
     }
+
+    ctx.shadowBlur = 0;
     lastX = x; lastY = y;
 
     if (Math.random() > 0.9) {
         checkProgress();
     }
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.shadowBlur = 20; 
-    ctx.shadowColor = 'black'; 
-
-    if (lastX !== null) {
-        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
-        const steps = Math.max(1, Math.floor(dist / 5));
-        for (let i = 0; i <= steps; i++) {
-            const tx = lastX + (dx * i/steps), ty = lastY + (dy * i/steps);
-            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
-        }
-    }
-
-    ctx.shadowBlur = 0; 
-    
 }
 
 function checkProgress() {
@@ -189,15 +190,14 @@ function checkProgress() {
     let clear = 0;
     for (let i = 3; i < pixels.length; i += 400) { if (pixels[i] < 150) clear++; }
     const pct = (clear / (pixels.length / 400)) * 100;
-    
+
     if (pct > 50 && !playedAlmost) {
         playedAlmost = true;
-        
         setTimeout(() => {
-            if(!isMuted && !finished) { 
+            if (!isMuted && !finished) {
                 document.getElementById('soundAlmost').play();
             }
-        }, 800); 
+        }, 800);
     }
 
     if (pct > 80) {
@@ -211,7 +211,7 @@ function finishGame() {
     soundScrub.pause();
     drawing = false;
     document.getElementById('sponge').style.display = 'none';
-    if(!isMuted) document.getElementById('soundFinish').play();
+    if (!isMuted) document.getElementById('soundFinish').play();
     setTimeout(() => {
         const wow = document.getElementById('wowEffect');
         wow.style.display = 'block';
@@ -223,39 +223,10 @@ function finishGame() {
         btn.onclick = () => window.open('https://your-link.com');
     }, 1500);
     setTimeout(() => {
-        const overlay = document.getElementById('overlay');
-        overlay.style.opacity = '1';
-            document.getElementById('bgAnimation').style.filter = 'blur(0px) brightness(0.6)';
+        document.getElementById('overlay').style.opacity = '1';
+        document.getElementById('bgAnimation').style.filter = 'blur(0px) brightness(0.6)';
     }, 3000);
 }
-const soundScrub = document.getElementById('soundScrub');
-soundScrub.volume = 0.3;
-
-canvas.addEventListener('pointerdown', e => { 
-    if(!gameActive) return;
-    drawing = true; 
-
-    if (!isMuted) {
-        soundScrub.currentTime = 0;
-        soundScrub.play().catch(e => console.log("Audio play blocked"));
-    }
-
-    const r = canvas.getBoundingClientRect();
-    lastX = e.clientX - r.left; lastY = e.clientY - r.top;
-});
-
-window.addEventListener('pointerup', () => { 
-    drawing = false; 
-    lastX = null; 
-    lastY = null;
-    soundScrub.pause();
-});
-
-window.addEventListener('pointermove', e => {
-    const r = canvas.getBoundingClientRect();
-    handleMove(e.clientX - r.left, e.clientY - r.top);
-});
-window.addEventListener('pointerup', () => { drawing = false; lastX = null; lastY = null; });
 
 function resize() {
     canvas.width = canvas.parentElement.offsetWidth;
@@ -264,7 +235,33 @@ function resize() {
     fog.src = 'assets/fog.webp';
     fog.onload = () => ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
 }
-window.addEventListener('resize', resize); resize();
+
+// === Event Listeners ===
+document.getElementById('splash').addEventListener('pointerdown', startGame);
+
+canvas.addEventListener('pointerdown', e => {
+    if (!gameActive) return;
+    drawing = true;
+    if (!isMuted) {
+        soundScrub.currentTime = 0;
+        soundScrub.play().catch(e => console.log("Audio play blocked"));
+    }
+    const r = canvas.getBoundingClientRect();
+    lastX = e.clientX - r.left;
+    lastY = e.clientY - r.top;
+});
+
+window.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    handleMove(e.clientX - r.left, e.clientY - r.top);
+});
+
+window.addEventListener('pointerup', () => {
+    drawing = false;
+    lastX = null;
+    lastY = null;
+    soundScrub.pause();
+});
 
 document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
     e.stopPropagation();
@@ -272,6 +269,9 @@ document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
     document.querySelectorAll('audio').forEach(a => a.muted = isMuted);
     document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
 });
+
+window.addEventListener('resize', resize);
+resize();
 </script>
 </body>
 </html>
