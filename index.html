@@ -15,14 +15,17 @@
     
     /* SPLASH SCREEN */
     #splash {
-        position: absolute; inset: 0; z-index: 100;
+        position: absolute; inset: 0; z-index: 100; 
         display: flex; justify-content: center; align-items: center;
         transition: opacity 0.5s ease; cursor: pointer;
     }
     .splash-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 101; }
-    #splashSpongeContainer { position: relative; z-index: 102; display: flex; justify-content: center; align-items: center; }
-    #splashSponge { width: 180px; transform: rotate(-15deg); }
-    #splashOutline { position: absolute; width: 150px; animation: blink 1.2s infinite; transform: rotate(-15deg); }
+    #splashSponge { 
+    width: 180px; 
+    transform: rotate(-15deg); 
+    animation: spongePulse 3s infinite ease-in-out;
+}
+    #splashOutline { position: absolute; width: 145px; animation: blink 1.2s infinite, spongePulse 3s infinite ease-in-out;}
     #splashHand { position: absolute; width: 70px; top: 55%; left: 40%; animation: handTap 1.5s infinite ease-in-out; }
 
 #clickLines {
@@ -52,6 +55,27 @@
     }
     100% { 
         opacity: 0; 
+    }
+}
+/* Анімація пульсації для губки на сплеш-екрані */
+#splashSpongeContainer {
+    position: relative;
+    z-index: 102;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Додаємо анімацію */
+    animation: spongePulse 2s infinite ease-in-out;
+}
+
+@keyframes spongePulse {
+    0%, 100% { 
+        transform: scale(1);
+        filter: drop-shadow(0 0 0px rgba(255,255,255,0));
+    }
+    50% { 
+        transform: scale(1.08); 
+        filter: drop-shadow(0 0 15px rgba(255,255,255,0.4)); /* М'яке світіння */
     }
 }
 
@@ -159,6 +183,10 @@ function handleMove(x, y) {
     if (!drawing) return;
 
     ctx.globalCompositeOperation = 'destination-out';
+    // Ефект м'яких країв
+    ctx.shadowBlur = 25; 
+    ctx.shadowColor = 'black'; 
+
     if (lastX !== null) {
         const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
         const steps = Math.max(1, Math.floor(dist / 5));
@@ -172,21 +200,8 @@ function handleMove(x, y) {
     if (Math.random() > 0.9) {
         checkProgress();
     }
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.shadowBlur = 20; 
-    ctx.shadowColor = 'black'; 
-
-    if (lastX !== null) {
-        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
-        const steps = Math.max(1, Math.floor(dist / 5));
-        for (let i = 0; i <= steps; i++) {
-            const tx = lastX + (dx * i/steps), ty = lastY + (dy * i/steps);
-            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
-        }
-    }
-
-    ctx.shadowBlur = 0; 
     
+    ctx.shadowBlur = 0; // Скидаємо після малювання
 }
 
 function checkProgress() {
