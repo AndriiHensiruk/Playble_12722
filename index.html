@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Pkyable_12722</title>
+<title>Pkyable_Final</title>
 <style>
     html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
     #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
@@ -12,23 +12,26 @@
     
     .bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
     #canvas { z-index: 2; }
+    
     #muteBtn {
         position: absolute;
         top: 20px;
         right: 20px;
-        z-index: 100;
-        width: 40px;
-        height: 40px;
+        z-index: 1000;
+        width: 45px;
+        height: 45px;
         cursor: pointer;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.6);
         border-radius: 50%;
         display: flex;
         justify-content: center;
         align-items: center;
         color: white;
-        font-size: 20px;
+        font-size: 24px;
         user-select: none;
+        border: 2px solid rgba(255,255,255,0.2);
     }
+
     #wowEffect { 
         display: none; position: absolute; z-index: 20; width: 45%; height: auto; 
         top: 35%; left: 55%; transform: translate(-50%, -50%); pointer-events: none; 
@@ -52,25 +55,26 @@
     @keyframes outlinePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
     .arrow { position: absolute; height: 60px; width: 60px; z-index: 4; animation: arrowFade 1.2s infinite; transform: translate(-50%, -50%); }
     @keyframes arrowFade { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    
     #overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.9);
+        background: rgba(0, 0, 0, 0.85);
         z-index: 15; 
         opacity: 0;
         transition: opacity 0.8s ease;
         pointer-events: none;
     }
-
-
 </style>
 </head>
 <body>
+
 <div id="muteBtn">🔊</div>
+
 <div id="wrapper">
     <div id="container">
-       <video id="bgAnimation" class="bg-img" autoplay loop muted playsinline>
-                 <source src="assets/Comp 1.webm" type="video/webm">
+        <video id="bgAnimation" class="bg-img" autoplay loop muted playsinline poster="assets/fog.webp">
+            <source src="assets/Comp 1.webm" type="video/webm">
         </video>
         <div id="overlay"></div>
         <img src="assets/wow.webp" id="wowEffect">
@@ -112,67 +116,41 @@ const brush = new Image(); brush.src = 'assets/sponge.webp';
 const muteBtn = document.getElementById('muteBtn');
 let isMuted = false;
 
+// Керування звуком
 function toggleMute(e) {
-    
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     isMuted = !isMuted;
-    
     const audios = document.querySelectorAll('audio');
-    audios.forEach(audio => {
-        audio.muted = isMuted;
-    });
-
+    audios.forEach(audio => { audio.muted = isMuted; });
     muteBtn.innerText = isMuted ? '🔇' : '🔊';
-    
-    console.log("Muted status:", isMuted); 
 }
-
-
 muteBtn.addEventListener('pointerdown', toggleMute);
 
-const originalUnlock = unlockAudio;
-unlockAudio = function() {
-    originalUnlock();
-    if (isMuted) {
-        const audios = document.querySelectorAll('audio');
-        audios.forEach(audio => audio.muted = true);
-    }
-};
+// Функція розблокування аудіо (викликається один раз при першому тапі)
 function unlockAudio() {
     if (audioUnlocked) return;
-
-   
+    
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (AudioContext) {
         const context = new AudioContext();
         if (context.state === 'suspended') context.resume();
     }
 
-   
-    bgMusic.muted = false;
+    // Запуск фонової музики
+    bgMusic.muted = isMuted;
     bgMusic.volume = 0.15;
-    const playPromise = bgMusic.play();
-    
-    if (playPromise !== undefined) {
-        playPromise.catch(error => console.log("Music autoplay blocked"));
-    }
+    bgMusic.play().catch(e => console.log("Audio blocked"));
 
+    // "Прогрів" звуків для iOS
     [soundStart, soundAlmost, soundFinish].forEach(s => {
-        const vol = s.volume;
-        s.volume = 0;
+        s.muted = isMuted;
         s.play().then(() => {
             s.pause();
             s.currentTime = 0;
-            s.volume = vol;
         }).catch(() => {});
     });
 
     audioUnlocked = true;
-    console.log("Audio Unlocked");
 }
 
 function getPos(clientX, clientY) {
@@ -231,8 +209,9 @@ function getScrubbedPercent() {
     try {
         const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
         let transparent = 0;
-        for (let i = 3; i < pixels.length; i += 256) { if (pixels[i] < 150) transparent++; }
-        return (transparent / (pixels.length / 256)) * 100;
+        const step = 256; 
+        for (let i = 3; i < pixels.length; i += step) { if (pixels[i] < 150) transparent++; }
+        return (transparent / (pixels.length / step)) * 100;
     } catch(e) { return 0; }
 }
 
@@ -241,7 +220,6 @@ function checkProgress() {
     const percent = getScrubbedPercent();
     if (percent >= 50 && percent < 70 && !playedAlmost) {
         playedAlmost = true;
-        soundAlmost.volume = 0.8;
         soundAlmost.play().catch(() => {});
     }
     if (percent >= 70) finishGame();
@@ -251,25 +229,19 @@ function finishGame() {
     if (finished) return;
     finished = true;
     soundStart.pause(); soundAlmost.pause();
-    const overlay = document.getElementById('overlay');
-    overlay.style.opacity = '1'; 
+    document.getElementById('overlay').style.opacity = '1'; 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     sponge.style.display = 'none'; outline.style.display = 'none';
     wowEffect.style.display = 'block'; ctaButton.style.display = 'block';
-    soundFinish.volume = 0.9; soundFinish.play().catch(() => {});
+    soundFinish.play().catch(() => {});
     ctaButton.onclick = () => window.open("https://your-link.com", "_blank");
 }
 
 function startInteraction(clientX, clientY) {
     if (finished) return;
     
-    if (!audioUnlocked) {
-        bgMusic.volume = 0.09; 
-        bgMusic.play().catch(error => {
-            console.log("Помилка відтворення:", error);
-        });
-        audioUnlocked = true;
-    }
+    // Розблоковуємо звук при першій взаємодії
+    unlockAudio();
 
     const p = getPos(clientX, clientY);
 
@@ -277,14 +249,14 @@ function startInteraction(clientX, clientY) {
         tutorial = false;
         arrows.forEach(a => a.style.display = 'none');
         if (outline) outline.style.display = 'none';
-        
-        // Можна також запустити звук "старту"
-        soundStart.play().catch(() => {});
+        // Невелика затримка для першого звуку після розблокування
+        setTimeout(() => {
+            if (!isMuted) soundStart.play().catch(() => {});
+        }, 100);
     }
 
     drawing = true;
-    lastX = p.x;
-    lastY = p.y;
+    lastX = p.x; lastY = p.y;
     moveSponge(p.x, p.y);
 }
 
@@ -301,8 +273,9 @@ function stopInteraction() {
     drawing = false; lastX = null; lastY = null;
 }
 
-canvas.addEventListener('touchstart', e => { e.preventDefault(); startInteraction(e.touches[0].clientX, e.touches[0].clientY); });
-canvas.addEventListener('touchmove', e => { e.preventDefault(); moveInteraction(e.touches[0].clientX, e.touches[0].clientY); });
+// Event Listeners
+canvas.addEventListener('touchstart', e => { e.preventDefault(); startInteraction(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
+canvas.addEventListener('touchmove', e => { e.preventDefault(); moveInteraction(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
 canvas.addEventListener('touchend', stopInteraction);
 canvas.addEventListener('mousedown', e => startInteraction(e.clientX, e.clientY));
 window.addEventListener('mousemove', e => moveInteraction(e.clientX, e.clientY));
