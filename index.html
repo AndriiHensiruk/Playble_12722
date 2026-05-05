@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Pkyable_Final</title>
+<title>Shower Playable Final</title>
 <style>
     html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
     #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
@@ -11,275 +11,267 @@
     @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
     
     .bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
-    #canvas { z-index: 2; }
+    #canvas { z-index: 5; filter: brightness(1.1) contrast(1.1);}
     
-    #muteBtn {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        width: 45px;
-        height: 45px;
-        cursor: pointer;
-        background: rgba(0,0,0,0.6);
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        font-size: 24px;
-        user-select: none;
-        border: 2px solid rgba(255,255,255,0.2);
+    /* SPLASH SCREEN */
+    #splash {
+        position: absolute; inset: 0; z-index: 100;
+        display: flex; justify-content: center; align-items: center;
+        transition: opacity 0.5s ease; cursor: pointer;
     }
+    .splash-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 101; }
+    #splashSpongeContainer { position: relative; z-index: 102; display: flex; justify-content: center; align-items: center; }
+    #splashSponge { width: 180px; transform: rotate(-15deg); }
+    #splashOutline { position: absolute; width: 150px; animation: blink 1.2s infinite; transform: rotate(-15deg); }
+    #splashHand { position: absolute; width: 70px; top: 55%; left: 40%; animation: handTap 1.5s infinite ease-in-out; }
+    /* Стилі для промінців кліку */
+#clickLines {
+    position: absolute;
+    width: 80px; /* налаштуй розмір під свій ассет */
+    z-index: 104;
+    pointer-events: none;
+    top: 40%; /* підкоригуй, щоб було над кінчиком пальця */
+    left: 25%;
+    opacity: 0;
+    transform: scale(0);
+    animation: clickRays 1.5s infinite ease-in-out;
+}
 
-    #wowEffect { 
-        display: none; position: absolute; z-index: 20; width: 45%; height: auto; 
-        top: 35%; left: 55%; transform: translate(-50%, -50%); pointer-events: none; 
-        animation: buttonPulse 3.5s infinite ease-in-out; 
+@keyframes clickRays {
+    0%, 45% { 
+        transform: scale(0); 
+        opacity: 0; 
     }
+    50% { 
+        transform: scale(1.2); 
+        opacity: 1; 
+    }
+    65% { 
+        transform: scale(1); 
+        opacity: 0; 
+    }
+    100% { 
+        opacity: 0; 
+    }
+}
 
-    #ctaButton { 
-        display: none; position: absolute; z-index: 21; bottom: 15%; left: 50%; 
-        width: 80%; height: auto; transform: translateX(-50%); cursor: pointer; 
-        animation: buttonPulse 1.8s infinite ease-in-out; 
-    }
 
-    @keyframes buttonPulse {
-        0% { transform: translateX(-50%) scale(1); }
-        50% { transform: translateX(-50%) scale(1.08); }
-        100% { transform: translateX(-50%) scale(1); }
-    }
+    /* GAME UI */
+    #sponge { position: absolute; height: 160px; width: 160px; z-index: 10; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); display: none; }
+    #muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,0.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; }
+    #overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 15; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; }
+    #wowEffect { display: none; position: absolute; z-index: 20; width: 40%; top: 35%; left: 70%; transform: translate(-50%, -50%); pointer-events: none; }
+    #ctaButton { display: none; position: absolute; z-index: 21; bottom: 15%; left: 50%; width: 80%; transform: translateX(-50%); cursor: pointer; animation: pulse 1.8s infinite; }
 
-    #sponge { position: absolute; height: 160px; width: 160px; z-index: 6; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); }
-    #outline { position: absolute; height: 130px; width: 130px; z-index: 5; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); animation: outlinePulse 1.1s infinite; }
-    @keyframes outlinePulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-    .arrow { position: absolute; height: 60px; width: 60px; z-index: 4; animation: arrowFade 1.2s infinite; transform: translate(-50%, -50%); }
-    @keyframes arrowFade { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-    
-    #overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.85);
-        z-index: 15; 
-        opacity: 0;
-        transition: opacity 0.8s ease;
-        pointer-events: none;
-    }
+    @keyframes handTap { 0%, 100% { transform: translate(30px, 100px); opacity: 0; } 50% { transform: translate(0, 0); opacity: 1; } 70% { transform: translate(0, 0) scale(0.9); opacity: 1; } }
+    @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    @keyframes pulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } }
 </style>
 </head>
 <body>
 
-<div id="muteBtn">🔊</div>
-
 <div id="wrapper">
     <div id="container">
-        <video id="bgAnimation" class="bg-img" autoplay loop muted playsinline poster="assets/fog.webp">
+        <video id="bgAnimation" class="bg-img" loop muted playsinline>
             <source src="assets/Comp 1.webm" type="video/webm">
         </video>
+
+        <canvas id="canvas"></canvas>
+
+        <div id="splash">
+            <img src="assets/fog.webp" class="splash-bg"> 
+            <div id="splashSpongeContainer">
+                <img src="assets/sponge_outline.webp" id="splashOutline">
+                <img src="assets/sponge.webp" id="splashSponge">
+                <img src="assets/click_lines.png" id="clickLines">
+                <img src="assets/hand-cursor.png" id="splashHand">
+            </div>
+        </div>
+
+        <div id="muteBtn">🔊</div>
         <div id="overlay"></div>
+        <img src="assets/sponge.webp" id="sponge">
         <img src="assets/wow.webp" id="wowEffect">
         <img src="assets/button.webp" id="ctaButton">
-        <canvas id="canvas"></canvas>
-        <img src="assets/arrow.webp" class="arrow" id="arrowUp">
-        <img src="assets/arrow.webp" class="arrow" id="arrowDown">
-        <img src="assets/arrow.webp" class="arrow" id="arrowLeft">
-        <img src="assets/arrow.webp" class="arrow" id="arrowRight">
-        <img src="assets/sponge_outline.webp" id="outline">
-        <img src="assets/sponge.webp" id="sponge">
     </div>
 </div>
 
 <audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
-<audio id="soundStart" src="assets/vo_start.mp3" playsinline preload="auto"></audio>
-<audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline preload="auto"></audio>
-<audio id="soundFinish" src="assets/vo_finish.mp3" playsinline preload="auto"></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" playsinline></audio>
+<audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" playsinline></audio>
+<audio id="soundScrub" src="assets/scrub.mp3" loop playsinline></audio>
 
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
-const container = document.getElementById('container');
-const wowEffect = document.getElementById('wowEffect');
-const ctaButton = document.getElementById('ctaButton');
-const sponge = document.getElementById('sponge');
-const outline = document.getElementById('outline');
-const arrows = [document.getElementById('arrowUp'), document.getElementById('arrowDown'), document.getElementById('arrowLeft'), document.getElementById('arrowRight')];
-
-const bgMusic = document.getElementById('bgMusic');
-const soundStart = document.getElementById('soundStart');
-const soundAlmost = document.getElementById('soundAlmost');
-const soundFinish = document.getElementById('soundFinish');
-
-let drawing = false, audioUnlocked = false, tutorial = true, finished = false, playedAlmost = false;
-let lastX = null, lastY = null, checkCounter = 0;
 const brush = new Image(); brush.src = 'assets/sponge.webp';
 
-const muteBtn = document.getElementById('muteBtn');
-let isMuted = false;
+let drawing = false, isMuted = false, gameActive = false, playedAlmost = false, finished = false;
+let lastX = null, lastY = null;
+let currentX = 0, currentY = 0;
 
-// Керування звуком
-function toggleMute(e) {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    isMuted = !isMuted;
-    const audios = document.querySelectorAll('audio');
-    audios.forEach(audio => { audio.muted = isMuted; });
-    muteBtn.innerText = isMuted ? '🔇' : '🔊';
-}
-muteBtn.addEventListener('pointerdown', toggleMute);
+function startGame() {
+    if (gameActive) return;
+    gameActive = true;
+    currentX = canvas.width / 2;
+    currentY = canvas.height / 2;
+    const gSponge = document.getElementById('sponge');
+    gSponge.style.left = currentX + 'px';
+    gSponge.style.top = currentY + 'px';
 
-// Функція розблокування аудіо (викликається один раз при першому тапі)
-function unlockAudio() {
-    if (audioUnlocked) return;
+    document.getElementById('splash').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('splash').style.display = 'none';
+        document.getElementById('muteBtn').style.display = 'flex';
+        gSponge.style.display = 'block';
+    }, 500);
+
+    // Звук та відео
+    document.getElementById('bgAnimation').play();
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.volume = 0.2;
+    bgMusic.play();
     
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-        const context = new AudioContext();
-        if (context.state === 'suspended') context.resume();
-    }
+    if(!isMuted) document.getElementById('soundStart').play();
 
-    // Запуск фонової музики
-    bgMusic.muted = isMuted;
-    bgMusic.volume = 0.15;
-    bgMusic.play().catch(e => console.log("Audio blocked"));
-
-    // "Прогрів" звуків для iOS
-    [soundStart, soundAlmost, soundFinish].forEach(s => {
-        s.muted = isMuted;
-        s.play().then(() => {
-            s.pause();
-            s.currentTime = 0;
-        }).catch(() => {});
-    });
-
-    audioUnlocked = true;
+    const video = document.getElementById('bgAnimation');
+    video.style.transition = "transform 2s ease-out, filter 1s ease";
+    video.style.transform = "scale(1.1)"; // Легке наближення при старті
+    video.play();
 }
 
-function getPos(clientX, clientY) {
-    const rect = canvas.getBoundingClientRect();
-    return { x: clientX - rect.left, y: clientY - rect.top };
-}
+document.getElementById('splash').addEventListener('pointerdown', startGame);
 
-function resize() {
-    canvas.width = container.offsetWidth;
-    canvas.height = container.offsetHeight;
-    const fog = new Image();
-    fog.src = 'assets/fog.webp';
-    fog.onload = () => {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
-    };
-    if (!finished) placeTutorial();
-}
-window.addEventListener('resize', resize); resize();
+function handleMove(x, y) {
+    if (!gameActive || finished) return;
+    
+    currentX = x; currentY = y;
+    const gSponge = document.getElementById('sponge');
+    gSponge.style.left = x + 'px';
+    gSponge.style.top = y + 'px';
 
-function placeTutorial() {
-    const x = canvas.width / 2, y = canvas.height * 0.5;
-    moveSponge(x, y);
-    const gap = 160;
-    setArrow(arrows[0], x, y - gap, 0);
-    setArrow(arrows[1], x, y + gap, 180);
-    setArrow(arrows[2], x - gap, y, -90);
-    setArrow(arrows[3], x + gap, y, 90);
-}
+    if (!drawing) return;
 
-function setArrow(el, x, y, rot) {
-    el.style.left = x + "px"; el.style.top = y + "px";
-    el.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
-}
-
-function moveSponge(x, y) {
-    sponge.style.left = x + "px"; sponge.style.top = y + "px";
-    if (tutorial) { outline.style.left = x + "px"; outline.style.top = y + "px"; }
-}
-
-function erase(x, y) {
     ctx.globalCompositeOperation = 'destination-out';
-    const size = 135;
     if (lastX !== null) {
-        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx * dx + dy * dy);
+        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
         const steps = Math.max(1, Math.floor(dist / 5));
         for (let i = 0; i <= steps; i++) {
-            const t = i / steps;
-            ctx.drawImage(brush, (lastX + dx * t) - size / 2, (lastY + dy * t) - size / 2, size, size);
+            const tx = lastX + (dx * i/steps), ty = lastY + (dy * i/steps);
+            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
         }
     }
     lastX = x; lastY = y;
-}
 
-function getScrubbedPercent() {
-    try {
-        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        let transparent = 0;
-        const step = 256; 
-        for (let i = 3; i < pixels.length; i += step) { if (pixels[i] < 150) transparent++; }
-        return (transparent / (pixels.length / step)) * 100;
-    } catch(e) { return 0; }
+    if (Math.random() > 0.9) {
+        checkProgress();
+    }
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.shadowBlur = 20; 
+    ctx.shadowColor = 'black'; 
+
+    if (lastX !== null) {
+        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
+        const steps = Math.max(1, Math.floor(dist / 5));
+        for (let i = 0; i <= steps; i++) {
+            const tx = lastX + (dx * i/steps), ty = lastY + (dy * i/steps);
+            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
+        }
+    }
+
+    ctx.shadowBlur = 0; 
+    
 }
 
 function checkProgress() {
-    if (finished) return;
-    const percent = getScrubbedPercent();
-    if (percent >= 50 && percent < 70 && !playedAlmost) {
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let clear = 0;
+    for (let i = 3; i < pixels.length; i += 400) { if (pixels[i] < 150) clear++; }
+    const pct = (clear / (pixels.length / 400)) * 100;
+    
+    if (pct > 50 && !playedAlmost) {
         playedAlmost = true;
-        soundAlmost.play().catch(() => {});
+        
+        setTimeout(() => {
+            if(!isMuted && !finished) { 
+                document.getElementById('soundAlmost').play();
+            }
+        }, 800); 
     }
-    if (percent >= 70) finishGame();
+
+    if (pct > 80) {
+        finishGame();
+    }
 }
 
 function finishGame() {
     if (finished) return;
     finished = true;
-    soundStart.pause(); soundAlmost.pause();
-    document.getElementById('overlay').style.opacity = '1'; 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    sponge.style.display = 'none'; outline.style.display = 'none';
-    wowEffect.style.display = 'block'; ctaButton.style.display = 'block';
-    soundFinish.play().catch(() => {});
-    ctaButton.onclick = () => window.open("https://your-link.com", "_blank");
+    soundScrub.pause();
+    drawing = false;
+    document.getElementById('sponge').style.display = 'none';
+    if(!isMuted) document.getElementById('soundFinish').play();
+    setTimeout(() => {
+        const wow = document.getElementById('wowEffect');
+        wow.style.display = 'block';
+        wow.style.animation = 'pulse 1s infinite';
+    }, 500);
+    setTimeout(() => {
+        const btn = document.getElementById('ctaButton');
+        btn.style.display = 'block';
+        btn.onclick = () => window.open('https://your-link.com');
+    }, 1500);
+    setTimeout(() => {
+        const overlay = document.getElementById('overlay');
+        overlay.style.opacity = '1';
+            document.getElementById('bgAnimation').style.filter = 'blur(0px) brightness(0.6)';
+    }, 3000);
 }
+const soundScrub = document.getElementById('soundScrub');
+soundScrub.volume = 0.3;
 
-function startInteraction(clientX, clientY) {
-    if (finished) return;
-    
-    // Розблоковуємо звук при першій взаємодії
-    unlockAudio();
+canvas.addEventListener('pointerdown', e => { 
+    if(!gameActive) return;
+    drawing = true; 
 
-    const p = getPos(clientX, clientY);
-
-    if (tutorial) {
-        tutorial = false;
-        arrows.forEach(a => a.style.display = 'none');
-        if (outline) outline.style.display = 'none';
-        // Невелика затримка для першого звуку після розблокування
-        setTimeout(() => {
-            if (!isMuted) soundStart.play().catch(() => {});
-        }, 100);
+    if (!isMuted) {
+        soundScrub.currentTime = 0;
+        soundScrub.play().catch(e => console.log("Audio play blocked"));
     }
 
-    drawing = true;
-    lastX = p.x; lastY = p.y;
-    moveSponge(p.x, p.y);
-}
+    const r = canvas.getBoundingClientRect();
+    lastX = e.clientX - r.left; lastY = e.clientY - r.top;
+});
 
-function moveInteraction(clientX, clientY) {
-    if (!drawing || finished) return;
-    const p = getPos(clientX, clientY);
-    moveSponge(p.x, p.y);
-    erase(p.x, p.y);
-    checkCounter++;
-    if (checkCounter % 10 === 0) checkProgress();
-}
+window.addEventListener('pointerup', () => { 
+    drawing = false; 
+    lastX = null; 
+    lastY = null;
+    soundScrub.pause();
+});
 
-function stopInteraction() {
-    drawing = false; lastX = null; lastY = null;
-}
+window.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    handleMove(e.clientX - r.left, e.clientY - r.top);
+});
+window.addEventListener('pointerup', () => { drawing = false; lastX = null; lastY = null; });
 
-// Event Listeners
-canvas.addEventListener('touchstart', e => { e.preventDefault(); startInteraction(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-canvas.addEventListener('touchmove', e => { e.preventDefault(); moveInteraction(e.touches[0].clientX, e.touches[0].clientY); }, {passive: false});
-canvas.addEventListener('touchend', stopInteraction);
-canvas.addEventListener('mousedown', e => startInteraction(e.clientX, e.clientY));
-window.addEventListener('mousemove', e => moveInteraction(e.clientX, e.clientY));
-window.addEventListener('mouseup', stopInteraction);
+function resize() {
+    canvas.width = canvas.parentElement.offsetWidth;
+    canvas.height = canvas.parentElement.offsetHeight;
+    const fog = new Image();
+    fog.src = 'assets/fog.webp';
+    fog.onload = () => ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
+}
+window.addEventListener('resize', resize); resize();
+
+document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    isMuted = !isMuted;
+    document.querySelectorAll('audio').forEach(a => a.muted = isMuted);
+    document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+});
 </script>
 </body>
 </html>
