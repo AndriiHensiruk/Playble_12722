@@ -146,7 +146,7 @@ function startGame() {
     });
 }
 
-document.getElementById('splash').addEventListener('pointerdown', startGame);
+document.getElementById('splash').addEventListener('click', startGame);
 
 function handleMove(x, y) {
     if (!gameActive || finished) return;
