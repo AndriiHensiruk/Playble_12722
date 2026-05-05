@@ -144,21 +144,35 @@ unlockAudio = function() {
 };
 function unlockAudio() {
     if (audioUnlocked) return;
-    
+
+   
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (AudioContext) {
         const context = new AudioContext();
         if (context.state === 'suspended') context.resume();
     }
 
+   
+    bgMusic.muted = false;
     bgMusic.volume = 0.15;
-    bgMusic.play().catch(() => {});
+    const playPromise = bgMusic.play();
+    
+    if (playPromise !== undefined) {
+        playPromise.catch(error => console.log("Music autoplay blocked"));
+    }
 
-    [soundAlmost, soundFinish].forEach(s => {
-        s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(() => {});
+    [soundStart, soundAlmost, soundFinish].forEach(s => {
+        const vol = s.volume;
+        s.volume = 0;
+        s.play().then(() => {
+            s.pause();
+            s.currentTime = 0;
+            s.volume = vol;
+        }).catch(() => {});
     });
 
     audioUnlocked = true;
+    console.log("Audio Unlocked");
 }
 
 function getPos(clientX, clientY) {
