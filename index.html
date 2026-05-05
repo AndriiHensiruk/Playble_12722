@@ -96,8 +96,8 @@
     </div>
 </div>
 
-<audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
-<audio id="soundStart" src="assets/vo_start.mp3" playsinline></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop muted playsinline></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" muted playsinline></audio>
 <audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline></audio>
 <audio id="soundFinish" src="assets/vo_finish.mp3" playsinline></audio>
 <audio id="soundScrub" src="assets/scrub.mp3" loop playsinline></audio>
@@ -116,13 +116,15 @@ let currentX = 0, currentY = 0;
 function startGame() {
     if (gameActive) return;
     gameActive = true;
-
+    
     const bgMusic = document.getElementById('bgMusic');
-    bgMusic.volume = 0.2;
+    bgMusic.volume = 0.09
+    bgMusic.muted = false;
     bgMusic.play().catch(e => console.warn('bgMusic blocked:', e));
 
     if (!isMuted) {
-        document.getElementById('soundStart').play().catch(e => console.warn('soundStart blocked:', e));
+        document.getElementById('soundStart').muted = false;
+        document.getElementById('soundStart').play().catch(e => console.warn(e));
     }
 
     ['soundAlmost', 'soundFinish', 'soundScrub'].forEach(id => {
