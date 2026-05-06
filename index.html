@@ -95,6 +95,8 @@
 
 <div id="wrapper">
     <div id="container">
+        <img id="staticPoster" src="assets/poster.webp" class="bg-img" style="z-index: 2;">
+
         <video id="bgAnimation" class="bg-img" loop muted playsinline>
             <source src="assets/Comp 1.webm" type="video/webm">
         </video>
@@ -137,31 +139,41 @@ let currentX = 0, currentY = 0;
 function startGame() {
     if (gameActive) return;
     gameActive = true;
+
+    // Отримуємо посилання на нові елементи
+    const video = document.getElementById('bgAnimation');
+    const poster = document.getElementById('staticPoster');
+    const splash = document.getElementById('splash');
+    const gSponge = document.getElementById('sponge');
+
+    // Налаштовуємо початкову позицію губки
     currentX = canvas.width / 2;
     currentY = canvas.height / 2;
-    const gSponge = document.getElementById('sponge');
     gSponge.style.left = currentX + 'px';
     gSponge.style.top = currentY + 'px';
 
-    document.getElementById('splash').style.opacity = '0';
+    // ПЕРЕХІД:
+    video.play();           // Запускаємо відео
+    video.style.opacity = '1'; // Робимо відео видимим
+    poster.style.opacity = '0'; // Ховаємо статичну картинку
+    splash.style.opacity = '0'; // Ховаємо заставку (фог, руку тощо)
+
     setTimeout(() => {
-        document.getElementById('splash').style.display = 'none';
+        splash.style.display = 'none';
+        poster.style.display = 'none'; // Повністю видаляємо постер з DOM
         document.getElementById('muteBtn').style.display = 'flex';
         gSponge.style.display = 'block';
     }, 500);
 
-   
-   document.getElementById('bgAnimation').play();
+    // Логіка звуку (без змін)
     const bgMusic = document.getElementById('bgMusic');
     bgMusic.volume = 0.09;
-    bgMusic.muted = false;  // ← знімаємо muted прямо тут
+    bgMusic.muted = false;
     bgMusic.play();
 
-    const soundStart = document.getElementById('soundStart');
     if(!isMuted) {
-        soundStart.muted = false;  // ← і тут
-        soundStart.play();
-        bgMusic.play();
+        document.getElementById('soundStart').muted = false;
+        document.getElementById('soundStart').play();
     }
 
     ['soundAlmost', 'soundFinish', 'soundScrub'].forEach(id => {
@@ -260,6 +272,13 @@ canvas.addEventListener('pointerdown', e => {
 
     const r = canvas.getBoundingClientRect();
     lastX = e.clientX - r.left; lastY = e.clientY - r.top;
+});
+window.addEventListener('load', () => {
+    const v = document.getElementById('bgAnimation');
+    v.muted = true; // Обов'язково
+    v.play().catch(e => {
+        console.log("Autoplay prevented, will play on click");
+    });
 });
 
 window.addEventListener('pointerup', () => { 
