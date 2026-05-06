@@ -242,17 +242,41 @@ resize();
    Must be called synchronously inside a
    user-gesture handler.
 ───────────────────────────────────────── */
+let audioUnlocked = false;
+
 function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+
+    // 1. Unlock Web Audio context (iOS requirement)
+    try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+            const actx = new AC();
+            const buf  = actx.createBuffer(1, 1, 22050);
+            const src  = actx.createBufferSource();
+            src.buffer = buf;
+            src.connect(actx.destination);
+            src.start(0);
+            if (actx.state === 'suspended') actx.resume();
+        }
+    } catch(e) {}
+
+    // 2. Silent play→pause on every <audio> element
     allAudio.forEach(a => {
-        // muted play→pause trick forces browser to unlock the audio element
-        a.muted = true;
+        a.muted  = true;
+        a.volume = 0;
         const p = a.play();
         if (p !== undefined) {
             p.then(() => {
                 a.pause();
                 a.currentTime = 0;
-                a.muted = isMuted; // restore mute state
-            }).catch(() => {});
+                a.muted  = false;
+                a.volume = 1;
+            }).catch(() => {
+                a.muted  = false;
+                a.volume = 1;
+            });
         }
     });
 }
@@ -378,11 +402,9 @@ function checkProgress() {
 
     if (pct > 50 && !playedAlmost) {
         playedAlmost = true;
-        setTimeout(() => {
-            if (!isMuted && !finished && soundAlmost.paused) {
-                soundAlmost.play().catch(() => {});
-            }
-        }, 600);
+        if (!isMuted && soundAlmost.paused) {
+            soundAlmost.play().catch(() => {});
+        }
     }
 
     if (pct > 80) finishGame();
@@ -399,6 +421,7 @@ function finishGame() {
     stopSound(soundScrub);
     $('sponge').style.display = 'none';
 
+    soundFinish.muted = false;
     if (!isMuted) soundFinish.play().catch(() => {});
 
     // WOW image
