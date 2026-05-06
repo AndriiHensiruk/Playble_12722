@@ -308,57 +308,7 @@ function getCoords(e) {
    GAME INIT  (called on first tap)
 ───────────────────────────────────────── */
 function initGameSession(e) {
-    if (e && e.cancelable && e.preventDefault) {
-        e.preventDefault(); 
-    }
-
     if (gameActive) return;
-    gameActive = true;
-
-    const bgVideo = $('bgAnimation');
-    bgVideo.play().then(() => {
-        console.log("Video started successfully in Telegram");
-    }).catch((err) => {
-        console.log("Video failed, trying again...", err);
-        bgVideo.muted = true;
-        bgVideo.play();
-    });
-
-    unlockAudio();
-
-    setTimeout(() => {
-        if (!isMuted) {
-            bgMusic.volume = 0.2;
-            bgMusic.muted = false;
-            bgMusic.currentTime = 0;
-            bgMusic.play().catch(() => {});
-
-            soundStart.volume = 1;
-            soundStart.muted = false;
-            soundStart.currentTime = 0;
-            soundStart.play().catch(() => {});
-        }
-    }, 100);
-
-    // ── 3. Hide splash (трохи швидше, щоб реакція була миттєвою) ──
-    const splash = $('splash');
-    splash.classList.add('hidden');
-    setTimeout(() => {
-        splash.style.display = 'none';
-        $('muteBtn').style.display = 'flex';
-        $('sponge').style.display = 'block';
-    }, 300);
-
-    // ── 4. Begin drawing ──
-    drawing = true;
-    const coords = getCoords(e);
-    lastX = coords.x;
-    lastY = coords.y;
-    handleMove(coords.x, coords.y);
-
-    // ── 5. Unlock scrub sound ──
-    soundScrub.muted = false;
-}    if (gameActive) return;
     gameActive = true;
 
     // ── 1. Unlock all audio elements (MUST be sync inside gesture) ──
