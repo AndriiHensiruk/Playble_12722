@@ -319,11 +319,8 @@ function initGameSession(e) {
     lastY = coords.y;
     handleMove(coords.x, coords.y);
 
-    // ── 6. Start scrub sound ──
-    setTimeout(() => {
-        soundScrub.muted = false;
-        if (!isMuted) soundScrub.play().catch(() => {});
-    }, 120);
+    // ── 6. Unlock scrub sound (but don't play yet — plays only on active drawing) ──
+    soundScrub.muted = false;
 }
 
 /* ─────────────────────────────────────────
