@@ -111,29 +111,50 @@ function initGameSession(e) {
     if (gameActive) return;
     gameActive = true;
 
-    // Спроба запустити відео (важливо для MP4 в Telegram)
+    // 1. Пріоритетний запуск відео
     video.play().catch(() => {
         video.muted = true;
         video.play();
     });
 
-    const audios = ['bgMusic', 'soundStart', 'soundAlmost', 'soundFinish', 'soundScrub'].map(id => document.getElementById(id));
+    // 2. Отримуємо посилання на звуки
+    const bgMusic = document.getElementById('bgMusic');
+    const soundStart = document.getElementById('soundStart');
+    const otherAudios = [
+        document.getElementById('soundAlmost'),
+        document.getElementById('soundFinish'),
+        document.getElementById('soundScrub')
+    ];
 
-    audios.forEach(audio => {
-        audio.muted = false;
-        let p = audio.play();
-        if (p !== undefined) {
-            p.then(() => {
-                if (audio.id !== 'bgMusic' && audio.id !== 'soundStart') {
-                    audio.pause();
-                    audio.currentTime = 0;
-                }
-            }).catch(err => console.log("Audio unlock fail"));
+    // 3. РОЗБЛОКУВАННЯ ТА ЗАПУСК
+    // Спочатку запускаємо музику (тихо)
+    bgMusic.volume = 0;
+    bgMusic.play().then(() => {
+        // Плавно піднімаємо гучність фону
+        let vol = 0;
+        let interval = setInterval(() => {
+            vol += 0.05;
+            bgMusic.volume = vol;
+            if (vol >= 0.25) clearInterval(interval);
+        }, 100);
+    }).catch(err => console.log("Music blocked"));
+
+    // Через мікро-паузу запускаємо перший вигук
+    setTimeout(() => {
+        if (!isMuted) {
+            soundStart.play().catch(e => console.log("VO Start blocked"));
         }
+    }, 200);
+
+    // Інші звуки просто "прогріваємо" (play + pause), щоб вони працювали пізніше
+    otherAudios.forEach(audio => {
+        audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+        }).catch(() => {});
     });
 
-    document.getElementById('bgMusic').volume = 0.25;
-
+    // 4. ВІЗУАЛ
     document.getElementById('splash').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('splash').style.display = 'none';
@@ -146,7 +167,12 @@ function initGameSession(e) {
     const coords = getCoords(e);
     lastX = coords.x; lastY = coords.y;
     handleMove(coords.x, coords.y);
-    if (!isMuted) document.getElementById('soundScrub').play();
+    
+    if (!isMuted) {
+        const scrub = document.getElementById('soundScrub');
+        scrub.volume = 0.5;
+        scrub.play().catch(()=>{});
+    }
 }
 
 function handleMove(x, y) {
