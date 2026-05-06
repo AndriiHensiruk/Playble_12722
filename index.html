@@ -4,92 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <title>Shower Playable MP4</title>
+
 <style>
-    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
-    #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
-    #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
-    @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
-    
-    .bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
-    #canvas { z-index: 5; filter: brightness(1.1) contrast(1.1); }
-    
-    /* SPLASH SCREEN */
-    #splash {
-        position: absolute; inset: 0; z-index: 100;
-        display: flex; justify-content: center; align-items: center;
-        transition: opacity 0.3s ease; cursor: pointer;
-    }
-    .splash-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 101; }
-    
-    #splashSpongeContainer { 
-        position: relative; z-index: 102; 
-        display: flex; justify-content: center; align-items: center;
-        animation: spongePulse 2s infinite ease-in-out;
-    }
-    #clickLines {
-        position: absolute; width: 80px; z-index: 104; pointer-events: none;
-        top: 40%; left: 25%; opacity: 0; transform: scale(0);
-        animation: clickRays 1.5s infinite ease-in-out;
-    }
+html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
+#wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
+#container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
+@media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
 
-    @keyframes clickRays {
-        0%, 45% { transform: scale(0); opacity: 0; }
-        50% { transform: scale(1.2); opacity: 1; }
-        65% { transform: scale(1); opacity: 0; }
-        100% { opacity: 0; }
-    }
-    #splashSponge { width: 180px; transform: rotate(-15deg); }
-    #splashOutline { position: absolute; width: 150px; animation: blink 1.2s infinite; transform: rotate(-15deg); }
-    #splashHand { position: absolute; width: 70px; top: 55%; left: 40%; animation: handTap 1.5s infinite ease-in-out; }
+.bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
+#canvas { z-index: 5; filter: brightness(1.1) contrast(1.1); }
 
-    /* GAME UI */
-    #sponge { position: absolute; height: 160px; width: 160px; z-index: 10; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); display: none; }
-    #muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,0.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; }
-    #overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 15; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
-    #wowEffect { display: none; position: absolute; z-index: 20; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%); pointer-events: none; }
-    #ctaButton { display: none; position: absolute; z-index: 21; bottom: 15%; left: 50%; width: 80%; transform: translateX(-50%); cursor: pointer; animation: pulse 1.8s infinite; }
+#splash { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; transition: opacity 0.3s ease; cursor: pointer; }
+.splash-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 101; }
 
-    /* ANIMATIONS */
-    @keyframes spongePulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); filter: drop-shadow(0 0 15px rgba(255,255,255,0.4)); } }
-    @keyframes handTap { 0%, 100% { transform: translate(30px, 100px); opacity: 0; } 50% { transform: translate(0, 0); opacity: 1; } 70% { transform: translate(0, 0) scale(0.9); opacity: 1; } }
-    @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
-    @keyframes pulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } }
+#splashSpongeContainer { position: relative; z-index: 102; display: flex; justify-content: center; align-items: center; animation: spongePulse 2s infinite ease-in-out; }
+#clickLines { position: absolute; width: 80px; z-index: 104; pointer-events: none; top: 40%; left: 25%; opacity: 0; transform: scale(0); animation: clickRays 1.5s infinite ease-in-out; }
+
+@keyframes clickRays { 0%,45%{transform:scale(0);opacity:0;} 50%{transform:scale(1.2);opacity:1;} 65%{transform:scale(1);opacity:0;} 100%{opacity:0;} }
+
+#splashSponge { width: 180px; transform: rotate(-15deg); }
+#splashOutline { position: absolute; width: 150px; animation: blink 1.2s infinite; transform: rotate(-15deg); }
+#splashHand { position: absolute; width: 70px; top: 55%; left: 40%; animation: handTap 1.5s infinite ease-in-out; }
+
+#sponge { position: absolute; height: 160px; width: 160px; z-index: 10; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); display: none; }
+#muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,0.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; }
+#overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 15; opacity: 0; transition: opacity 1.5s ease; pointer-events: none; }
+#wowEffect { display: none; position: absolute; z-index: 20; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%); pointer-events: none; }
+#ctaButton { display: none; position: absolute; z-index: 21; bottom: 15%; left: 50%; width: 80%; transform: translateX(-50%); cursor: pointer; animation: pulse 1.8s infinite; }
+
+@keyframes spongePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);filter:drop-shadow(0 0 15px rgba(255,255,255,0.4));} }
+@keyframes handTap { 0%,100%{transform:translate(30px,100px);opacity:0;} 50%{transform:translate(0,0);opacity:1;} 70%{transform:translate(0,0) scale(0.9);opacity:1;} }
+@keyframes blink { 0%,100%{opacity:0.3;} 50%{opacity:1;} }
+@keyframes pulse { 0%,100%{transform:translateX(-50%) scale(1);} 50%{transform:translateX(-50%) scale(1.05);} }
 </style>
 </head>
+
 <body>
 
 <div id="wrapper">
-    <div id="container">
-        <!-- ЗМІНЕНО НА MP4 + додано атрибути для iOS/Telegram -->
-        <video id="bgAnimation" class="bg-img" loop muted playsinline webkit-playsinline preload="auto">
-            <source src="assets/Comp 1.mp4" type="video/mp4">
-        </video>
-        
-        <canvas id="canvas"></canvas>
+<div id="container">
 
-        <div id="splash">
-            <img src="assets/fog.webp" class="splash-bg"> 
-            <div id="splashSpongeContainer">
-                <img src="assets/sponge_outline.webp" id="splashOutline">
-                <img src="assets/click_lines.png" id="clickLines">
-                <img src="assets/sponge.webp" id="splashSponge">
-                <img src="assets/hand-cursor.png" id="splashHand">
-            </div>
-        </div>
+<!-- ✅ FIXED VIDEO -->
+<video id="bgAnimation" class="bg-img"
+    loop muted autoplay playsinline webkit-playsinline preload="auto">
+    <source src="assets/bgvideo.mp4" type="video/mp4">
+</video>
 
-        <div id="muteBtn">🔊</div>
-        <div id="overlay"></div>
-        <img src="assets/sponge.webp" id="sponge">
-        <img src="assets/wow.webp" id="wowEffect">
-        <img src="assets/button.webp" id="ctaButton">
+<canvas id="canvas"></canvas>
+
+<div id="splash">
+    <img src="assets/fog.webp" class="splash-bg"> 
+    <div id="splashSpongeContainer">
+        <img src="assets/sponge_outline.webp" id="splashOutline">
+        <img src="assets/click_lines.png" id="clickLines">
+        <img src="assets/sponge.webp" id="splashSponge">
+        <img src="assets/hand-cursor.png" id="splashHand">
     </div>
 </div>
 
-<audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
-<audio id="soundStart" src="assets/vo_start.mp3" playsinline></audio>
-<audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline></audio>
-<audio id="soundFinish" src="assets/vo_finish.mp3" playsinline></audio>
-<audio id="soundScrub" src="assets/scrub.mp3" loop playsinline></audio>
+<div id="muteBtn">🔊</div>
+<div id="overlay"></div>
+<img src="assets/sponge.webp" id="sponge">
+<img src="assets/wow.webp" id="wowEffect">
+<img src="assets/button.webp" id="ctaButton">
+
+</div>
+</div>
+
+<!-- ✅ FIXED AUDIO -->
+<audio id="bgMusic" src="assets/music.mp3" loop preload="auto" playsinline></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" preload="auto" playsinline></audio>
+<audio id="soundAlmost" src="assets/vo_almost.mp3" preload="auto" playsinline></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" preload="auto" playsinline></audio>
+<audio id="soundScrub" src="assets/scrub.mp3" loop preload="auto" playsinline></audio>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -97,183 +84,171 @@ const ctx = canvas.getContext('2d', { willReadFrequently: true });
 const brush = new Image(); brush.src = 'assets/sponge.webp';
 const video = document.getElementById('bgAnimation');
 
-let drawing = false, isMuted = false, gameActive = false, playedAlmost = false, finished = false;
-let lastX = null, lastY = null;
+// 🔥 TELEGRAM VIDEO FIX
+video.muted = true;
+video.play().catch(()=>{});
 
-function getCoords(e) {
-    const r = canvas.getBoundingClientRect();
-    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-    return { x: clientX - r.left, y: clientY - r.top };
+let drawing=false,isMuted=false,gameActive=false,playedAlmost=false,finished=false;
+let lastX=null,lastY=null;
+
+function getCoords(e){
+    const r=canvas.getBoundingClientRect();
+    const x=e.clientX||(e.touches&&e.touches[0].clientX);
+    const y=e.clientY||(e.touches&&e.touches[0].clientY);
+    return{x:x-r.left,y:y-r.top};
 }
 
-function initGameSession(e) {
-    if (gameActive) return;
-    gameActive = true;
+function initGameSession(e){
+if(gameActive)return;
+gameActive=true;
 
-    // 1. Пріоритетний запуск відео
-    video.play().catch(() => {
-        video.muted = true;
-        video.play();
-    });
+video.play().catch(()=>{video.muted=true;video.play();});
 
-    // 2. Отримуємо посилання на звуки
-    const bgMusic = document.getElementById('bgMusic');
-    const soundStart = document.getElementById('soundStart');
-    const otherAudios = [
-        document.getElementById('soundAlmost'),
-        document.getElementById('soundFinish'),
-        document.getElementById('soundScrub')
-    ];
+const bgMusic=document.getElementById('bgMusic');
+const soundStart=document.getElementById('soundStart');
+const otherAudios=[
+document.getElementById('soundAlmost'),
+document.getElementById('soundFinish'),
+document.getElementById('soundScrub')
+];
 
-    // 3. РОЗБЛОКУВАННЯ ТА ЗАПУСК
-    // Спочатку запускаємо музику (тихо)
-    bgMusic.volume = 0;
-    bgMusic.play().then(() => {
-        // Плавно піднімаємо гучність фону
-        let vol = 0;
-        let interval = setInterval(() => {
-            vol += 0.05;
-            bgMusic.volume = vol;
-            if (vol >= 0.25) clearInterval(interval);
-        }, 100);
-    }).catch(err => console.log("Music blocked"));
+// 🔥 TELEGRAM SAFE AUDIO
+bgMusic.muted=true;
+bgMusic.play().then(()=>{
+    bgMusic.muted=false;
 
-    // Через мікро-паузу запускаємо перший вигук
-    setTimeout(() => {
-        if (!isMuted) {
-            soundStart.play().catch(e => console.log("VO Start blocked"));
-        }
-    }, 200);
+    let vol=0;
+    let interval=setInterval(()=>{
+        vol+=0.03;
+        bgMusic.volume=vol;
+        if(vol>=0.15)clearInterval(interval); // тихіше
+    },120);
 
-    // Інші звуки просто "прогріваємо" (play + pause), щоб вони працювали пізніше
-    otherAudios.forEach(audio => {
-        audio.play().then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-        }).catch(() => {});
-    });
+}).catch(()=>{});
 
-    // 4. ВІЗУАЛ
-    document.getElementById('splash').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('splash').style.display = 'none';
-        document.getElementById('muteBtn').style.display = 'flex';
-        document.getElementById('sponge').style.display = 'block';
-    }, 300);
+setTimeout(()=>{
+    if(!isMuted)soundStart.play().catch(()=>{});
+},200);
 
-    // Перший мазок
-    drawing = true;
-    const coords = getCoords(e);
-    lastX = coords.x; lastY = coords.y;
-    handleMove(coords.x, coords.y);
-    
-    if (!isMuted) {
-        const scrub = document.getElementById('soundScrub');
-        scrub.volume = 0.5;
-        scrub.play().catch(()=>{});
-    }
-}
-
-function handleMove(x, y) {
-    if (!gameActive || finished) return;
-    const gSponge = document.getElementById('sponge');
-    gSponge.style.left = x + 'px';
-    gSponge.style.top = y + 'px';
-
-    if (!drawing) return;
-
-    ctx.globalCompositeOperation = 'destination-out';
-    if (lastX !== null) {
-        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
-        const steps = Math.max(1, Math.floor(dist / 5));
-        for (let i = 0; i <= steps; i++) {
-            const tx = lastX + (dx * i/steps), ty = lastY + (dy * i/steps);
-            ctx.drawImage(brush, tx - 80, ty - 80, 160, 160);
-        }
-    }
-    lastX = x; lastY = y;
-    if (Math.random() > 0.95) checkProgress();
-}
-
-function checkProgress() {
-    if (finished) return;
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let clear = 0;
-    const step = 400; 
-    for (let i = 3; i < pixels.length; i += step) { if (pixels[i] < 150) clear++; }
-    const pct = (clear / (pixels.length / step)) * 100;
-    
-    if (pct > 50 && !playedAlmost) {
-        playedAlmost = true;
-        const sA = document.getElementById('soundAlmost');
-        if(!isMuted && sA.paused) sA.play().catch(()=>{});
-    }
-    if (pct > 78) finishGame();
-}
-
-function finishGame() {
-    if (finished) return;
-    finished = true;
-    drawing = false;
-    document.getElementById('soundScrub').pause();
-    document.getElementById('sponge').style.display = 'none';
-    if(!isMuted) document.getElementById('soundFinish').play().catch(()=>{});
-    
-    setTimeout(() => { 
-        const wow = document.getElementById('wowEffect');
-        wow.style.display = 'block';
-    }, 400);
-
-    setTimeout(() => { 
-        document.getElementById('overlay').style.opacity = '1';
-        document.getElementById('ctaButton').style.display = 'block';
-        document.getElementById('ctaButton').onclick = () => window.open('https://your-link.com');
-    }, 1500);
-}
-
-// Події
-document.getElementById('splash').addEventListener('pointerdown', initGameSession);
-
-window.addEventListener('pointermove', (e) => {
-    if (!gameActive || finished) return;
-    const coords = getCoords(e);
-    handleMove(coords.x, coords.y);
+otherAudios.forEach(a=>{
+    a.play().then(()=>{a.pause();a.currentTime=0;}).catch(()=>{});
 });
 
-window.addEventListener('pointerdown', (e) => {
-    if (!gameActive || finished) return;
-    drawing = true;
-    const coords = getCoords(e);
-    lastX = coords.x; lastY = coords.y;
-    if (!isMuted) document.getElementById('soundScrub').play().catch(()=>{});
-});
+document.getElementById('splash').style.opacity='0';
+setTimeout(()=>{
+document.getElementById('splash').style.display='none';
+document.getElementById('muteBtn').style.display='flex';
+document.getElementById('sponge').style.display='block';
+},300);
 
-window.addEventListener('pointerup', () => {
-    drawing = false;
-    lastX = null; lastY = null;
-    document.getElementById('soundScrub').pause();
-});
+drawing=true;
+const c=getCoords(e);
+lastX=c.x;lastY=c.y;
+handleMove(c.x,c.y);
 
-function resize() {
-    canvas.width = canvas.parentElement.offsetWidth;
-    canvas.height = canvas.parentElement.offsetHeight;
-    const fog = new Image();
-    fog.src = 'assets/fog.webp';
-    fog.onload = () => {
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
-    };
+if(!isMuted){
+const scrub=document.getElementById('soundScrub');
+scrub.volume=0.25; // тихіше
+scrub.play().catch(()=>{});
 }
-window.addEventListener('resize', resize); 
+}
+
+function handleMove(x,y){
+if(!gameActive||finished)return;
+const s=document.getElementById('sponge');
+s.style.left=x+'px';s.style.top=y+'px';
+
+if(!drawing)return;
+
+ctx.globalCompositeOperation='destination-out';
+if(lastX!==null){
+const dx=x-lastX,dy=y-lastY,dist=Math.sqrt(dx*dx+dy*dy);
+const steps=Math.max(1,Math.floor(dist/5));
+for(let i=0;i<=steps;i++){
+const tx=lastX+(dx*i/steps),ty=lastY+(dy*i/steps);
+ctx.drawImage(brush,tx-80,ty-80,160,160);
+}
+}
+lastX=x;lastY=y;
+if(Math.random()>0.95)checkProgress();
+}
+
+function checkProgress(){
+if(finished)return;
+const pixels=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+let clear=0;
+const step=400;
+for(let i=3;i<pixels.length;i+=step){if(pixels[i]<150)clear++;}
+const pct=(clear/(pixels.length/step))*100;
+
+if(pct>50&&!playedAlmost){
+playedAlmost=true;
+const sA=document.getElementById('soundAlmost');
+if(!isMuted&&sA.paused)sA.play().catch(()=>{});
+}
+if(pct>78)finishGame();
+}
+
+function finishGame(){
+if(finished)return;
+finished=true;
+drawing=false;
+document.getElementById('soundScrub').pause();
+document.getElementById('sponge').style.display='none';
+if(!isMuted)document.getElementById('soundFinish').play().catch(()=>{});
+
+setTimeout(()=>{document.getElementById('wowEffect').style.display='block';},400);
+
+setTimeout(()=>{
+document.getElementById('overlay').style.opacity='1';
+const btn=document.getElementById('ctaButton');
+btn.style.display='block';
+btn.onclick=()=>window.open('https://your-link.com');
+},1500);
+}
+
+document.getElementById('splash').addEventListener('pointerdown',initGameSession);
+
+window.addEventListener('pointermove',e=>{
+if(!gameActive||finished)return;
+const c=getCoords(e);
+handleMove(c.x,c.y);
+});
+
+window.addEventListener('pointerdown',e=>{
+if(!gameActive||finished)return;
+drawing=true;
+const c=getCoords(e);
+lastX=c.x;lastY=c.y;
+if(!isMuted)document.getElementById('soundScrub').play().catch(()=>{});
+});
+
+window.addEventListener('pointerup',()=>{
+drawing=false;
+lastX=null;lastY=null;
+document.getElementById('soundScrub').pause();
+});
+
+function resize(){
+canvas.width=canvas.parentElement.offsetWidth;
+canvas.height=canvas.parentElement.offsetHeight;
+const fog=new Image();
+fog.src='assets/fog.webp';
+fog.onload=()=>{
+ctx.globalCompositeOperation='source-over';
+ctx.drawImage(fog,0,0,canvas.width,canvas.height);
+};
+}
+window.addEventListener('resize',resize);
 resize();
 
-document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
-    e.stopPropagation();
-    isMuted = !isMuted;
-    document.querySelectorAll('audio').forEach(a => a.muted = isMuted);
-    document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+document.getElementById('muteBtn').addEventListener('pointerdown',e=>{
+e.stopPropagation();
+isMuted=!isMuted;
+document.querySelectorAll('audio').forEach(a=>a.muted=isMuted);
+document.getElementById('muteBtn').innerText=isMuted?'🔇':'🔊';
 });
 </script>
+
 </body>
 </html>
