@@ -152,7 +152,7 @@
 <div id="wrapper">
   <div id="container">
 
-    <!-- Background video -->
+     <!-- Background video -->
     <video id="bgAnimation" class="bg-img" loop muted playsinline preload="auto">
       <source src="assets/Comp 1.webm" type="video/webm">
     </video>
@@ -316,7 +316,7 @@ function initGameSession(e) {
 
     // ── 2. Start bg music + intro VO after tiny delay ──
     setTimeout(() => {
-        bgMusic.volume = 0.2;
+        bgMusic.volume = 0.09;
         bgMusic.muted  = false;
         bgMusic.play().catch(() => {});
 
@@ -449,8 +449,15 @@ function finishGame() {
    EVENT LISTENERS
 ───────────────────────────────────────── */
 
-// Splash tap → init
-$('splash').addEventListener('pointerdown', initGameSession, { passive: false });
+// Splash tap → ini
+const splashEl = $('splash');
+
+splashEl.addEventListener('touchstart', initGameSession, { passive: false });
+
+splashEl.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'touch') return; 
+    initGameSession(e);
+});
 
 // Pointer move (sponge follow + draw)
 window.addEventListener('pointermove', e => {
