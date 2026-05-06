@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Shower Playable Final</title>
+<title>Shower Playable MP4</title>
 <style>
     html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
     #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
@@ -27,34 +27,17 @@
         animation: spongePulse 2s infinite ease-in-out;
     }
     #clickLines {
-    position: absolute;
-    width: 80px;
-    z-index: 104;
-    pointer-events: none;
-    top: 40%;
-    left: 25%;
-    opacity: 0;
-    transform: scale(0);
-    animation: clickRays 1.5s infinite ease-in-out;
-}
+        position: absolute; width: 80px; z-index: 104; pointer-events: none;
+        top: 40%; left: 25%; opacity: 0; transform: scale(0);
+        animation: clickRays 1.5s infinite ease-in-out;
+    }
 
-@keyframes clickRays {
-    0%, 45% { 
-        transform: scale(0); 
-        opacity: 0; 
+    @keyframes clickRays {
+        0%, 45% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.2); opacity: 1; }
+        65% { transform: scale(1); opacity: 0; }
+        100% { opacity: 0; }
     }
-    50% { 
-        transform: scale(1.2); 
-        opacity: 1; 
-    }
-    65% { 
-        transform: scale(1); 
-        opacity: 0; 
-    }
-    100% { 
-        opacity: 0; 
-    }
-}
     #splashSponge { width: 180px; transform: rotate(-15deg); }
     #splashOutline { position: absolute; width: 150px; animation: blink 1.2s infinite; transform: rotate(-15deg); }
     #splashHand { position: absolute; width: 70px; top: 55%; left: 40%; animation: handTap 1.5s infinite ease-in-out; }
@@ -77,9 +60,11 @@
 
 <div id="wrapper">
     <div id="container">
-        <video id="bgAnimation" class="bg-img" loop muted playsinline>
-            <source src="assets/Comp 1.webm" type="video/webm">
+        <!-- ЗМІНЕНО НА MP4 + додано атрибути для iOS/Telegram -->
+        <video id="bgAnimation" class="bg-img" loop muted playsinline webkit-playsinline preload="auto">
+            <source src="assets/Comp 1.mp4" type="video/mp4">
         </video>
+        
         <canvas id="canvas"></canvas>
 
         <div id="splash">
@@ -100,7 +85,6 @@
     </div>
 </div>
 
-<!-- AUDIO -->
 <audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
 <audio id="soundStart" src="assets/vo_start.mp3" playsinline></audio>
 <audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline></audio>
@@ -111,55 +95,45 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
 const brush = new Image(); brush.src = 'assets/sponge.webp';
+const video = document.getElementById('bgAnimation');
 
 let drawing = false, isMuted = false, gameActive = false, playedAlmost = false, finished = false;
 let lastX = null, lastY = null;
 
 function getCoords(e) {
     const r = canvas.getBoundingClientRect();
-    return {
-        x: e.clientX - r.left,
-        y: e.clientY - r.top
-    };
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    return { x: clientX - r.left, y: clientY - r.top };
 }
 
 function initGameSession(e) {
     if (gameActive) return;
     gameActive = true;
 
-    // Масив усіх аудіо-елементів
-    const audios = [
-        document.getElementById('bgMusic'),
-        document.getElementById('soundStart'),
-        document.getElementById('soundAlmost'),
-        document.getElementById('soundFinish'),
-        document.getElementById('soundScrub')
-    ];
+    // Спроба запустити відео (важливо для MP4 в Telegram)
+    video.play().catch(() => {
+        video.muted = true;
+        video.play();
+    });
 
-    // КЛЮЧОВИЙ МОМЕНТ: Розблоковуємо кожен файл
+    const audios = ['bgMusic', 'soundStart', 'soundAlmost', 'soundFinish', 'soundScrub'].map(id => document.getElementById(id));
+
     audios.forEach(audio => {
-        audio.muted = false; // На всякий випадок
-        // Пробуємо запустити
-        let playPromise = audio.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                // Якщо це не музика і не початковий звук — одразу на паузу
+        audio.muted = false;
+        let p = audio.play();
+        if (p !== undefined) {
+            p.then(() => {
                 if (audio.id !== 'bgMusic' && audio.id !== 'soundStart') {
                     audio.pause();
                     audio.currentTime = 0;
                 }
-            }).catch(error => {
-                console.log("Audio block error: ", error);
-            });
+            }).catch(err => console.log("Audio unlock fail"));
         }
     });
 
-    // Налаштовуємо гучність фону
-    const bgMusic = document.getElementById('bgMusic');
-    bgMusic.volume = 0.2; // Зроби трохи голосніше для тесту (0.09 дуже тихо)
+    document.getElementById('bgMusic').volume = 0.25;
 
-    // Решта логіки (сплеш, відео)
     document.getElementById('splash').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('splash').style.display = 'none';
@@ -167,21 +141,16 @@ function initGameSession(e) {
         document.getElementById('sponge').style.display = 'block';
     }, 300);
 
-    document.getElementById('bgAnimation').play();
-
-    // Малювання
+    // Перший мазок
     drawing = true;
     const coords = getCoords(e);
-    lastX = coords.x;
-    lastY = coords.y;
+    lastX = coords.x; lastY = coords.y;
     handleMove(coords.x, coords.y);
-
     if (!isMuted) document.getElementById('soundScrub').play();
 }
 
 function handleMove(x, y) {
     if (!gameActive || finished) return;
-
     const gSponge = document.getElementById('sponge');
     gSponge.style.left = x + 'px';
     gSponge.style.top = y + 'px';
@@ -189,67 +158,55 @@ function handleMove(x, y) {
     if (!drawing) return;
 
     ctx.globalCompositeOperation = 'destination-out';
-    ctx.shadowBlur = 20; 
-    ctx.shadowColor = 'black'; 
-
     if (lastX !== null) {
         const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
         const steps = Math.max(1, Math.floor(dist / 5));
         for (let i = 0; i <= steps; i++) {
             const tx = lastX + (dx * i/steps), ty = lastY + (dy * i/steps);
-            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
+            ctx.drawImage(brush, tx - 80, ty - 80, 160, 160);
         }
     }
     lastX = x; lastY = y;
-
-    if (Math.random() > 0.96) checkProgress();
-    ctx.shadowBlur = 0;
+    if (Math.random() > 0.95) checkProgress();
 }
 
 function checkProgress() {
     if (finished) return;
     const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     let clear = 0;
-    const step = 800; // Оптимізація перевірки
+    const step = 400; 
     for (let i = 3; i < pixels.length; i += step) { if (pixels[i] < 150) clear++; }
     const pct = (clear / (pixels.length / step)) * 100;
     
-    if (pct > 50 && !playedAlmost && !finished) {
+    if (pct > 50 && !playedAlmost) {
         playedAlmost = true;
-        setTimeout(() => { 
-            const sA = document.getElementById('soundAlmost');
-            if(!isMuted && !finished && sA.paused) sA.play(); 
-        }, 600); 
+        const sA = document.getElementById('soundAlmost');
+        if(!isMuted && sA.paused) sA.play().catch(()=>{});
     }
-    if (pct > 80) finishGame();
+    if (pct > 78) finishGame();
 }
+
 function finishGame() {
     if (finished) return;
     finished = true;
     drawing = false;
     document.getElementById('soundScrub').pause();
     document.getElementById('sponge').style.display = 'none';
-    
-    if(!isMuted) document.getElementById('soundFinish').play();
+    if(!isMuted) document.getElementById('soundFinish').play().catch(()=>{});
     
     setTimeout(() => { 
         const wow = document.getElementById('wowEffect');
-        wow.style.display = 'block'; 
-        wow.style.animation = 'pulse 1s infinite';
-    }, 600);
-
-    setTimeout(() => { 
-        const btn = document.getElementById('ctaButton');
-        btn.style.display = 'block'; 
-        btn.onclick = () => window.open('https://your-link.com');
-    }, 1600);
+        wow.style.display = 'block';
+    }, 400);
 
     setTimeout(() => { 
         document.getElementById('overlay').style.opacity = '1';
-        document.getElementById('bgAnimation').style.filter = 'blur(0px) brightness(0.6)';
-    }, 3200);
+        document.getElementById('ctaButton').style.display = 'block';
+        document.getElementById('ctaButton').onclick = () => window.open('https://your-link.com');
+    }, 1500);
 }
 
+// Події
 document.getElementById('splash').addEventListener('pointerdown', initGameSession);
 
 window.addEventListener('pointermove', (e) => {
@@ -262,18 +219,13 @@ window.addEventListener('pointerdown', (e) => {
     if (!gameActive || finished) return;
     drawing = true;
     const coords = getCoords(e);
-    lastX = coords.x;
-    lastY = coords.y;
-    if (!isMuted) {
-        const sc = document.getElementById('soundScrub');
-        if (sc.paused) sc.play();
-    }
+    lastX = coords.x; lastY = coords.y;
+    if (!isMuted) document.getElementById('soundScrub').play().catch(()=>{});
 });
 
 window.addEventListener('pointerup', () => {
     drawing = false;
-    lastX = null;
-    lastY = null;
+    lastX = null; lastY = null;
     document.getElementById('soundScrub').pause();
 });
 
@@ -287,7 +239,8 @@ function resize() {
         ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
     };
 }
-window.addEventListener('resize', resize); resize();
+window.addEventListener('resize', resize); 
+resize();
 
 document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
     e.stopPropagation();
