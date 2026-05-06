@@ -127,25 +127,39 @@ function initGameSession(e) {
     if (gameActive) return;
     gameActive = true;
 
-    // 1. "Пробуджуємо" всі аудіо елементи
-    const audios = ['bgMusic', 'soundStart', 'soundAlmost', 'soundFinish', 'soundScrub'];
-    audios.forEach(id => { 
-        const a = document.getElementById(id);
-        a.muted = false; 
-        a.play().then(() => {
-            // Якщо це не музика і не перший звук, ставимо на паузу, щоб просто розблокувати
-            if (id !== 'bgMusic' && id !== 'soundStart') {
-                a.pause();
-                a.currentTime = 0;
-            }
-        }).catch(err => console.log("Audio unlock error:", err));
+    // Масив усіх аудіо-елементів
+    const audios = [
+        document.getElementById('bgMusic'),
+        document.getElementById('soundStart'),
+        document.getElementById('soundAlmost'),
+        document.getElementById('soundFinish'),
+        document.getElementById('soundScrub')
+    ];
+
+    // КЛЮЧОВИЙ МОМЕНТ: Розблоковуємо кожен файл
+    audios.forEach(audio => {
+        audio.muted = false; // На всякий випадок
+        // Пробуємо запустити
+        let playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // Якщо це не музика і не початковий звук — одразу на паузу
+                if (audio.id !== 'bgMusic' && audio.id !== 'soundStart') {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+            }).catch(error => {
+                console.log("Audio block error: ", error);
+            });
+        }
     });
 
-    // 2. Налаштування гучності та старт фону
+    // Налаштовуємо гучність фону
     const bgMusic = document.getElementById('bgMusic');
-    bgMusic.volume = 0.15; // Трохи голосніше, 0.09 може бути зовсім не чутно на телефоні
-    
-    // 3. Решта логіки сплешу
+    bgMusic.volume = 0.2; // Зроби трохи голосніше для тесту (0.09 дуже тихо)
+
+    // Решта логіки (сплеш, відео)
     document.getElementById('splash').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('splash').style.display = 'none';
@@ -155,7 +169,7 @@ function initGameSession(e) {
 
     document.getElementById('bgAnimation').play();
 
-    // Починаємо малювати
+    // Малювання
     drawing = true;
     const coords = getCoords(e);
     lastX = coords.x;
