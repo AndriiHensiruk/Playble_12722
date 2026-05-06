@@ -57,7 +57,6 @@
         opacity: 0; 
     }
 }
-/* Анімація пульсації для губки на сплеш-екрані */
 #splashSpongeContainer {
     position: relative;
     z-index: 102;
@@ -151,7 +150,7 @@ function startGame() {
         gSponge.style.display = 'block';
     }, 500);
 
-    // Звук та відео
+   
    document.getElementById('bgAnimation').play();
     const bgMusic = document.getElementById('bgMusic');
     bgMusic.volume = 0.09;
@@ -162,9 +161,9 @@ function startGame() {
     if(!isMuted) {
         soundStart.muted = false;  // ← і тут
         soundStart.play();
+        bgMusic.play();
     }
 
-    // Розблоковуємо решту аудіо для майбутніх викликів
     ['soundAlmost', 'soundFinish', 'soundScrub'].forEach(id => {
         document.getElementById(id).muted = false;
     });
@@ -183,7 +182,6 @@ function handleMove(x, y) {
     if (!drawing) return;
 
     ctx.globalCompositeOperation = 'destination-out';
-    // Ефект м'яких країв
     ctx.shadowBlur = 25; 
     ctx.shadowColor = 'black'; 
 
@@ -201,7 +199,7 @@ function handleMove(x, y) {
         checkProgress();
     }
     
-    ctx.shadowBlur = 0; // Скидаємо після малювання
+    ctx.shadowBlur = 0;
 }
 
 function checkProgress() {
