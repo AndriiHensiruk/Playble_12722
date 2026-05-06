@@ -101,11 +101,11 @@
 </div>
 
 <!-- AUDIO -->
-<audio id="bgMusic" src="assets/music.mp3" loop muted playsinline></audio>
-<audio id="soundStart" src="assets/vo_start.mp3" muted playsinline></audio>
-<audio id="soundAlmost" src="assets/vo_almost.mp3" muted playsinline></audio>
-<audio id="soundFinish" src="assets/vo_finish.mp3" muted playsinline></audio>
-<audio id="soundScrub" src="assets/scrub.mp3" loop muted playsinline></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" playsinline></audio>
+<audio id="soundAlmost" src="assets/vo_almost.mp3" playsinline></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" playsinline></audio>
+<audio id="soundScrub" src="assets/scrub.mp3" loop playsinline></audio>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -127,11 +127,25 @@ function initGameSession(e) {
     if (gameActive) return;
     gameActive = true;
 
-    // Знімаємо Muted
+    // 1. "Пробуджуємо" всі аудіо елементи
     const audios = ['bgMusic', 'soundStart', 'soundAlmost', 'soundFinish', 'soundScrub'];
-    audios.forEach(id => { document.getElementById(id).muted = false; });
+    audios.forEach(id => { 
+        const a = document.getElementById(id);
+        a.muted = false; 
+        a.play().then(() => {
+            // Якщо це не музика і не перший звук, ставимо на паузу, щоб просто розблокувати
+            if (id !== 'bgMusic' && id !== 'soundStart') {
+                a.pause();
+                a.currentTime = 0;
+            }
+        }).catch(err => console.log("Audio unlock error:", err));
+    });
 
-    // Ховаємо сплеш
+    // 2. Налаштування гучності та старт фону
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.volume = 0.15; // Трохи голосніше, 0.09 може бути зовсім не чутно на телефоні
+    
+    // 3. Решта логіки сплешу
     document.getElementById('splash').style.opacity = '0';
     setTimeout(() => {
         document.getElementById('splash').style.display = 'none';
@@ -139,14 +153,9 @@ function initGameSession(e) {
         document.getElementById('sponge').style.display = 'block';
     }, 300);
 
-    // Старт медіа
     document.getElementById('bgAnimation').play();
-    const bgMusic = document.getElementById('bgMusic');
-    bgMusic.volume = 0.09;
-    bgMusic.play();
-    
-    if(!isMuted) document.getElementById('soundStart').play();
 
+    // Починаємо малювати
     drawing = true;
     const coords = getCoords(e);
     lastX = coords.x;
