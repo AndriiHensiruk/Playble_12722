@@ -384,6 +384,49 @@ let lastY = null;
 let currentX = 0;
 let currentY = 0;
 
+let audioUnlocked = false;
+
+function unlockAudio() {
+
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+
+    const sounds = [
+        document.getElementById('bgMusic'),
+        document.getElementById('soundStart'),
+        document.getElementById('soundFinish'),
+        document.getElementById('soundScrub')
+    ];
+
+    ssounds.forEach(a => {
+    if (!a) return;
+    a.muted = false;
+    a.volume = 1;
+    const p = a.play();
+    if (p !== undefined) {
+        p.then(() => {
+            if (a.id !== 'bgMusic') {
+                a.pause();
+                a.currentTime = 0;
+            }
+        }).catch(() => {});
+    }
+});
+}
+function forceAudioKick() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    gain.gain.value = 0.001;
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.01);
+}
+
 /* START GAME */
 
 function startGame() {
@@ -425,24 +468,32 @@ function startGame() {
 
     /* AUDIO */
 
-    const bgMusic = document.getElementById('bgMusic');
 
-    bgMusic.volume = 0.09;
-    bgMusic.muted = false;
-    bgMusic.play().catch(() => {});
+    const startSound = document.getElementById('soundStart');
 
-    if (!isMuted) {
+startSound.muted = false;
+startSound.currentTime = 0;
 
-        const startSound =
-            document.getElementById('soundStart');
+const p = startSound.play();
 
-        startSound.muted = false;
-        startSound.play().catch(() => {});
-    }
+if (p) {
+    p.catch(() => {
+        // fallback: спроба повтору
+        setTimeout(() => {
+            startSound.play().catch(() => {});
+        }, 100);
+    });
+}
 
     ['soundFinish', 'soundScrub'].forEach(id => {
         document.getElementById(id).muted = false;
     });
+
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.muted = false;
+    bgMusic.volume = 0.5; // гучність фону
+    bgMusic.currentTime = 0;
+    bgMusic.play().catch(() => {});
 }
 
 /* SPLASH TAP */
@@ -451,7 +502,8 @@ document.getElementById('splash')
 .addEventListener('pointerdown', (e) => {
 
     e.preventDefault();
-
+    unlockAudio();
+    forceAudioKick();
     startGame();
 
     drawing = true;
@@ -572,11 +624,13 @@ function finishGame() {
     document.getElementById('splashSponge')
         .style.display = 'none';
     
-spawnWaterDrops(
-    canvas.width / 2,
-    canvas.height / 2,
-    180
+const center = getCanvasPos(
+    window.innerWidth / 2,
+    window.innerHeight / 2
 );
+
+spawnWaterDrops(center.x, center.y, 120);
+
     if (!isMuted) {
         document.getElementById('soundFinish')
             .play()
@@ -696,16 +750,10 @@ function initFog() {
 
 function resize() {
 
-    fxCanvas.width = 
-        canvas.width;
-    fxCanvas.height =
-        canvas.height;
-
-    canvas.width =
-        canvas.parentElement.offsetWidth;
-
-    canvas.height =
-        canvas.parentElement.offsetHeight;
+    canvas.width = canvas.parentElement.offsetWidth;
+    canvas.height = canvas.parentElement.offsetHeight;
+    fxCanvas.width = canvas.width;
+    fxCanvas.height = canvas.height;
     initFog();
     const fog = new Image();
 
@@ -876,6 +924,26 @@ function fxLoop() {
 }
 
 fxLoop();
+
+function getCanvasPos(clientX, clientY) {
+
+    const r = fxCanvas.getBoundingClientRect();
+
+    return {
+        x: (clientX - r.left) * (fxCanvas.width / r.width),
+        y: (clientY - r.top) * (fxCanvas.height / r.height)
+    };
+}
+
+function getFxPos(clientX, clientY) {
+
+    const r = fxCanvas.getBoundingClientRect();
+
+    return {
+        x: (clientX - r.left) * (fxCanvas.width / r.width),
+        y: (clientY - r.top) * (fxCanvas.height / r.height)
+    };
+}
 
 </script>
 
