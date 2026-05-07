@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>Shower Playable Final</title>
+<style>
+    html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
+    #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
+    #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
+    @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
+    
+    .bg-img, #canvas { position: absolute; width: 100%; height: 100%; object-fit: cover; top: 0; left: 0; }
+    #canvas { z-index: 5; filter: brightness(1.1) contrast(1.1);}
+    
+    /* SPLASH SCREEN */
+    #splash {
+        position: absolute; inset: 0; z-index: 100; 
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        transition: opacity 0.5s ease; cursor: pointer;
+    }
+    .splash-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 101; }
+    #splashSpongeContainer {
+        position: relative;
+        z-index: 102;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: -10vh;
+        /* Додаємо світіння в анімацію */
+        animation: spongePulseGlow 3s infinite ease-in-out;
+    }
+    #splashSponge { 
+        width: 180px; 
+        transform: rotate(-15deg); 
+    }
+    /* Більш виразна та яскрава обводка */
+    #splashOutline { 
+        position: absolute; 
+        width: 160px; /* Трохи більше */
+        animation: blink 1s infinite;
+    }
+    /* Збільшена рука */
+    #splashHand { 
+        position: absolute; 
+        width: 90px; /* Збільшено */
+        top: 60%; left: 45%; 
+        animation: handTapBetter 1.5s infinite ease-in-out; 
+    }
+
+    /* Надпис під губкою */
+    #splashCaption {
+        width: 70%;
+        margin-top: 5vh;
+        z-index: 103;
+        position: relative;
+        animation: captionPulse 2.5s infinite ease-in-out;
+    }
+
+#clickLines {
+    position: absolute;
+    width: 80px;
+    z-index: 104;
+    pointer-events: none;
+    top: 40%;
+    left: 25%;
+    opacity: 0;
+    transform: scale(0);
+    animation: clickRays 1.5s infinite ease-in-out;
+}
+
+/* --- АНІМАЦІЇ --- */
+
+@keyframes clickRays {
+    0%, 45% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    65% { transform: scale(1); opacity: 0; }
+    100% { opacity: 0; }
+}
+
+@keyframes spongePulseGlow {
+    0%, 100% { 
+        transform: scale(1);
+        filter: drop-shadow(0 0 0px rgba(255,255,255,0));
+    }
+    50% { 
+        transform: scale(1.08); 
+        filter: drop-shadow(0 0 20px rgba(255,255,255,0.8)); /* Яскраве світіння */
+    }
+}
+
+@keyframes handTapBetter { 
+    0%, 100% { transform: translate(40px, 120px); opacity: 0; } 
+    50% { transform: translate(0, 0); opacity: 1; } 
+    70% { transform: translate(0, 0) scale(0.85); opacity: 1; } 
+}
+
+@keyframes blink { 0%, 100% { opacity: 0.1; } 50% { opacity: 1; } }
+@keyframes pulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.05); } }
+
+@keyframes captionPulse {
+    0%, 100% { transform: scale(1); opacity: 1;}
+    50% { transform: scale(1.03); opacity: 0.8;}
+    70% { opacity: 1;}
+}
+
+    /* GAME UI */
+    #sponge { position: absolute; height: 160px; width: 160px; z-index: 10; pointer-events: none; transform: translate(-50%, -50%) rotate(-15deg); display: none; }
+    #muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,0.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; font-size: 24px; border: 2px solid rgba(255,255,255,0.2); cursor: pointer; }
+    #overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 15; opacity: 0; transition: opacity 0.8s ease; pointer-events: none; }
+    #wowEffect { display: none; position: absolute; z-index: 20; width: 40%; top: 35%; left: 70%; transform: translate(-50%, -50%); pointer-events: none; }
+    #ctaButton { display: none; position: absolute; z-index: 21; bottom: 15%; left: 50%; width: 80%; transform: translateX(-50%); cursor: pointer; animation: pulse 1.8s infinite; }
+
+</style>
+</head>
+<body>
+
+<div id="wrapper">
+    <div id="container">
+    <img id="staticPoster" src="assets/poster.jpg" class="bg-img" style="z-index: 1;">
+        <video id="bgAnimation" class="bg-img" loop muted playsinline style="opacity: 0;">
+            <source src="assets/Comp 1.webm" type="video/webm">
+        </video>
+
+        <canvas id="canvas"></canvas>
+
+        <div id="splash">
+            <img src="assets/fog.webp" class="splash-bg"> 
+            <div id="splashSpongeContainer">
+                <img src="assets/sponge_outline.webp" id="splashOutline">
+                <img src="assets/sponge.webp" id="splashSponge">
+                <img src="assets/click_lines.png" id="clickLines">
+                <img src="assets/hand-cursor.png" id="splashHand">
+            </div>
+            <img src="assets/caption.webp" id="splashCaption">
+        </div>
+
+        <div id="muteBtn">🔊</div>
+        <div id="overlay"></div>
+        <img src="assets/sponge.webp" id="sponge">
+        <img src="assets/wow.webp" id="wowEffect">
+        <img src="assets/button.webp" id="ctaButton">
+    </div>
+</div>
+
+<audio id="bgMusic" src="assets/music.mp3" loop muted playsinline></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" muted playsinline></audio>
+<audio id="soundAlmost" src="assets/vo_almost.mp3" muted playsinline></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" muted playsinline></audio>
+<audio id="soundScrub" src="assets/scrub.mp3" loop muted playsinline></audio>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const brush = new Image(); brush.src = 'assets/sponge.webp';
+
+let drawing = false, isMuted = false, gameActive = false, playedAlmost = false, finished = false;
+let firstScrubStarted = false; // ПРАПОРЕЦЬ: перевіряє, чи почалося стирання
+let lastX = null, lastY = null;
+let currentX = 0, currentY = 0;
+
+// Функція ПЕРЕХОДУ та старту медіа (запускається при стиранні)
+function transitionToGameplay() {
+    if (gameActive) return;
+    gameActive = true;
+
+    // Отримуємо посилання на нові елементи
+    const video = document.getElementById('bgAnimation');
+    const poster = document.getElementById('staticPoster');
+    const splash = document.getElementById('splash');
+
+    // ПЕРЕХІД:
+    video.play().catch(e => console.log("Video play failed on scrub")); 
+    video.style.opacity = '1'; // Робимо відео видимим
+    poster.style.opacity = '0'; // Ховаємо статичну картинку
+    splash.style.opacity = '0'; // Ховаємо заставку (фог, руку, губку тощо)
+
+    setTimeout(() => {
+        splash.style.display = 'none';
+        poster.style.display = 'none'; // Повністю видаляємо постер з DOM
+        document.getElementById('muteBtn').style.display = 'flex';
+    }, 500);
+
+    // Логіка звуку
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.volume = 0.09;
+    bgMusic.muted = false;
+    bgMusic.play().catch(e => console.log("Music play blocked"));
+
+    if(!isMuted) {
+        document.getElementById('soundStart').muted = false;
+        document.getElementById('soundStart').play().catch(e => console.log("VO play blocked"));
+    }
+
+    ['soundAlmost', 'soundFinish', 'soundScrub'].forEach(id => {
+        document.getElementById(id).muted = false;
+    });
+}
+
+// Видаляємо клік на заставку
+// document.getElementById('splash').addEventListener('click', startGame);
+
+function handleMove(x, y) {
+    if (finished) return;
+    
+    // ЛОГІКА ПЕРЕХОДУ НА СТАРТІ СТИРАННЯ
+    if (drawing && !firstScrubStarted) {
+        firstScrubStarted = true;
+        transitionToGameplay();
+    }
+
+    currentX = x; currentY = y;
+    const gSponge = document.getElementById('sponge');
+    
+    // Показуємо ігрову губку, якщо гра вже активна
+    if (gameActive) {
+        gSponge.style.display = 'block';
+        gSponge.style.left = x + 'px';
+        gSponge.style.top = y + 'px';
+    }
+
+    if (!drawing || !gameActive) return;
+
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.shadowBlur = 25; 
+    ctx.shadowColor = 'black'; 
+
+    if (lastX !== null) {
+        const dx = x - lastX, dy = y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
+        const steps = Math.max(1, Math.floor(dist / 5));
+        for (let i = 0; i <= steps; i++) {
+            const tx = lastX + (dx * i/steps), ty = lastY + (dy * i/steps);
+            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
+        }
+    }
+    lastX = x; lastY = y;
+
+    if (Math.random() > 0.9) {
+        checkProgress();
+    }
+    
+    ctx.shadowBlur = 0;
+}
+
+function checkProgress() {
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let clear = 0;
+    for (let i = 3; i < pixels.length; i += 400) { if (pixels[i] < 150) clear++; }
+    const pct = (clear / (pixels.length / 400)) * 100;
+    
+    if (pct > 50 && !playedAlmost) {
+        playedAlmost = true;
+        
+        setTimeout(() => {
+            if(!isMuted && !finished) { 
+                document.getElementById('soundAlmost').play();
+            }
+        }, 800); 
+    }
+
+    if (pct > 80) {
+        finishGame();
+    }
+}
+
+function finishGame() {
+    if (finished) return;
+    finished = true;
+
+    drawing = false;
+    document.getElementById('sponge').style.display = 'none';
+    if(!isMuted) document.getElementById('soundFinish').play();
+    setTimeout(() => {
+        const wow = document.getElementById('wowEffect');
+        wow.style.display = 'block';
+        wow.style.animation = 'pulse 1s infinite';
+    }, 500);
+    setTimeout(() => {
+        const btn = document.getElementById('ctaButton');
+        btn.style.display = 'block';
+        btn.onclick = () => window.open('https://your-link.com');
+    }, 1500);
+    setTimeout(() => {
+        const overlay = document.getElementById('overlay');
+        overlay.style.opacity = '1';
+            document.getElementById('bgAnimation').style.filter = 'blur(0px) brightness(0.6)';
+    }, 3000);
+}
+const soundScrub = document.getElementById('soundScrub');
+soundScrub.volume = 0.3;
+
+canvas.addEventListener('pointerdown', e => { 
+    // Тепер затискання працює завжди (щоб можна було почати стирати)
+    drawing = true; 
+
+    // Але звук скрибу тільки якщо гра вже почалася
+    if (!isMuted && gameActive) {
+        soundScrub.currentTime = 0;
+        soundScrub.play().catch(e => console.log("Audio play blocked"));
+    }
+
+    const r = canvas.getBoundingClientRect();
+    lastX = e.clientX - r.left; lastY = e.clientY - r.top;
+});
+
+window.addEventListener('load', () => {
+    const v = document.getElementById('bgAnimation');
+    v.muted = true; // Обов'язково
+    v.play().catch(e => {
+        console.log("Autoplay prevented, will play on scrub");
+    });
+});
+
+window.addEventListener('pointerup', () => { 
+    drawing = false; 
+    lastX = null; 
+    lastY = null;
+    soundScrub.pause();
+});
+window.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    handleMove(e.clientX - r.left, e.clientY - r.top);
+});
+
+function resize() {
+    canvas.width = canvas.parentElement.offsetWidth;
+    canvas.height = canvas.parentElement.offsetHeight;
+    
+    const fog = new Image();
+    fog.src = 'assets/fog.webp';
+    fog.onload = () => {
+        // Малюємо "туман" на канвасі
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
+        
+        // ДОДАТКОВО: можна додати легкий білий фільтр, щоб скло здавалося матовим
+        ctx.fillStyle = "rgba(255, 255, 255, 0.1)"; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    };
+}
+window.addEventListener('resize', resize); resize();
+
+document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    isMuted = !isMuted;
+    document.querySelectorAll('audio').forEach(a => a.muted = isMuted);
+    document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
+});
+</script>
+</body>
+</html>
