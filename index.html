@@ -55,7 +55,6 @@ html, body {
 }
 
 /* SPLASH */
-
 #splash {
     position: absolute;
     inset: 0;
@@ -65,16 +64,6 @@ html, body {
     justify-content: center;
     align-items: center;
     pointer-events: auto;
-}
-
-.splash-bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 4;
-    transition: opacity .4s ease;
 }
 
 #splashSpongeContainer {
@@ -103,7 +92,6 @@ html, body {
     transform: translate(-50%, -50%) rotate(-15deg);
     animation: blink 1s infinite;
     z-index: 110;
-    /*transition: opacity .3s ease;*/
 }
 
 #splashHand {
@@ -126,7 +114,6 @@ html, body {
     opacity: 0;
     transform: scale(0);
     animation: clickRays 1.5s infinite ease-in-out;
-    transition: opacity .3s ease;
 }
 
 #splashCaption {
@@ -135,11 +122,9 @@ html, body {
     width: 70%;
     z-index: 108;
     animation: captionPulse 2.5s infinite ease-in-out;
-    transition: opacity .3s ease;
 }
 
 /* GAME UI */
-
 #muteBtn {
     position: absolute;
     top: 20px;
@@ -170,34 +155,32 @@ html, body {
 #wowEffect {
     position: absolute;
     z-index: 20;
-    width: 40%;
-    top: 45%;
-    left: 70%;
+    width: 40%; 
+    top: 45%;   
+    left: 70%; 
     transform: translate(-50%, -50%) scale(0.5); 
     opacity: 0; 
-    
     pointer-events: none; 
-    
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, filter 0.8s ease;
+    filter: brightness(1);
 }
 #ctaButton {
     display: none;
     position: absolute;
     z-index: 21;
     bottom: 15%;
-    left: 50%;
+    left: 10%;
     width: 80%;
-    transform: translateX(-50%);
+    transform: translate(-50%);
     animation: pulse 1.8s infinite;
 }
 
 #wowEffect.visible {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+    animation: wowPulse 2.5s infinite ease-in-out;
 }
 
-/* FX CANVAS */
 #fxCanvas {
     position: absolute;
     inset: 0;
@@ -206,86 +189,36 @@ html, body {
 }
 
 /* ANIMATIONS */
-
 @keyframes clickRays {
-    0%,45% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-    }
-
-    50% {
-        transform: translate(-50%, -50%) scale(1.2);
-        opacity: 1;
-    }
-
-    65% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 0;
-    }
+    0%,45% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    65% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    100% { opacity: 0; }
 }
-
 @keyframes spongePulseGlow {
-    0%,100% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 0 rgba(255,255,255,0));
-    }
-
-    50% {
-        transform: scale(1.08);
-        filter: drop-shadow(0 0 20px rgba(255,255,255,.8));
-    }
+    0%,100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
+    50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(255,255,255,.8)); }
 }
-
 @keyframes handTapBetter {
-    0%,100% {
-        transform: translate(40px,120px);
-        opacity: 0;
-    }
-
-    50% {
-        transform: translate(0,0);
-        opacity: 1;
-    }
-
-    70% {
-        transform: translate(0,0) scale(.85);
-        opacity: 1;
-    }
+    0%,100% { transform: translate(40px,120px); opacity: 0; }
+    50% { transform: translate(0,0); opacity: 1; }
+    70% { transform: translate(0,0) scale(.85); opacity: 1; }
 }
-
 @keyframes blink {
     0%,100% { opacity: .3; }
     50% { opacity: 1; }
 }
-
 @keyframes pulse {
-    0%,100% {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    50% {
-        transform: translate(-50%, -50%) scale(1.05);
-    }
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
 }
-
 @keyframes captionPulse {
-    0%,100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.03);
-        opacity: .8;
-    }
-
-    70% {
-        opacity: 1;
-    }
+    0%,100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.03); opacity: .8; }
+}
+@keyframes wowPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.08); }
 }
 </style>
 </head>
@@ -294,88 +227,37 @@ html, body {
 <canvas id="fxCanvas"></canvas>
 <div id="wrapper">
     <div id="container">
-
-        <img id="staticPoster"
-             src="assets/poster.webp"
-             class="bg-img"
-             style="z-index:2;">
-
-        <video id="bgAnimation"
-               class="bg-img"
-               loop
-               muted
-               playsinline>
+        <img id="staticPoster" src="assets/poster.webp" class="bg-img" style="z-index:2;">
+        <video id="bgAnimation" class="bg-img" loop muted playsinline>
             <source src="assets/Comp 1.webm" type="video/webm">
         </video>
-
         <canvas id="canvas"></canvas>
-
-        <!-- SPLASH -->
 
         <div id="splash">
             <div id="splashSpongeContainer">
-
-                <img src="assets/sponge_outline.webp"
-                     id="splashOutline">
-                 
-                <img src="assets/sponge.webp"
-                     id="splashSponge">
-
-                <img src="assets/click_lines.png"
-                     id="clickLines">
-
-                <img src="assets/hand-cursor.png"
-                     id="splashHand">
-
+                <img src="assets/sponge_outline.webp" id="splashOutline">
+                <img src="assets/sponge.webp" id="splashSponge">
+                <img src="assets/click_lines.png" id="clickLines">
+                <img src="assets/hand-cursor.png" id="splashHand">
             </div>
-
-            <img src="assets/caption.webp"
-                 id="splashCaption">
-
+            <img src="assets/caption.webp" id="splashCaption">
         </div>
 
-        <!-- UI -->
-
         <div id="muteBtn">🔊</div>
-
         <div id="overlay"></div>
-
         <img src="assets/wow.webp" id="wowEffect">
-
         <img src="assets/button.webp" id="ctaButton">
-
     </div>
 </div>
 
-<!-- AUDIO -->
-
-<audio id="bgMusic"
-       src="assets/music.mp3"
-       loop
-       muted
-       playsinline></audio>
-
-<audio id="soundStart"
-       src="assets/vo_start.mp3"
-       muted
-       playsinline></audio>
-
-<audio id="soundFinish"
-       src="assets/vo_finish.mp3"
-       muted
-       playsinline></audio>
-
-<audio id="soundScrub"
-       src="assets/scrub.mp3"
-       loop
-       muted
-       playsinline></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop muted playsinline></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" muted playsinline></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" muted playsinline></audio>
+<audio id="soundScrub" src="assets/scrub.mp3" loop muted playsinline></audio>
 
 <script>
-
 const fxCanvas = document.getElementById('fxCanvas');
 const fx = fxCanvas.getContext('2d');
-
 let particles = [];
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -387,84 +269,48 @@ let drawing = false;
 let isMuted = false;
 let gameActive = false;
 let finished = false;
-
 let lastX = null;
 let lastY = null;
-
-let currentX = 0;
-let currentY = 0;
-
 let audioUnlocked = false;
 
+// ФУНКЦІЯ РОЗБЛОКУВАННЯ АУДІО
 function unlockAudio() {
-
     if (audioUnlocked) return;
     audioUnlocked = true;
 
+    // Резюме аудіоконтексту для iOS/Chrome
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (AudioContext) {
+        const audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    // Знімаємо mute з усіх елементів
     const sounds = [
         document.getElementById('bgMusic'),
         document.getElementById('soundStart'),
         document.getElementById('soundFinish'),
         document.getElementById('soundScrub')
     ];
-
-    ssounds.forEach(a => {
-    if (!a) return;
-    a.muted = false;
-    a.volume = 1;
-    const p = a.play();
-    if (p !== undefined) {
-        p.then(() => {
-            if (a.id !== 'bgMusic') {
-                a.pause();
-                a.currentTime = 0;
-            }
-        }).catch(() => {});
-    }
-});
+    sounds.forEach(s => { if(s) s.muted = false; });
 }
-function forceAudioKick() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    gain.gain.value = 0.001;
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.01);
-}
-
-/* START GAME */
 
 function startGame() {
-
     if (gameActive) return;
-
     gameActive = true;
 
     const video = document.getElementById('bgAnimation');
     const poster = document.getElementById('staticPoster');
+    
+    document.getElementById('splashSpongeContainer').style.animation = 'none';
 
-    const gSponge = document.getElementById('splashSponge');
+    // Відео
+    video.play().catch(() => {
+        video.muted = true;
+        video.play();
+    });
 
-    currentX = canvas.width / 2;
-    currentY = canvas.height / 2;
-
-    gSponge.style.left = currentX + 'px';
-    gSponge.style.top = currentY + 'px';
-    gSponge.style.transform =
-        'translate(-50%, -50%) rotate(-15deg)';
-
-    document.getElementById('splashSpongeContainer')
-        .style.animation = 'none';
-
-    video.play().catch(() => {});
     video.style.opacity = '1';
-
-    //document.querySelector('.splash-bg').style.opacity = '0';
     document.getElementById('splashCaption').style.display = 'none';
     document.getElementById('splashOutline').style.display = 'none';
     document.getElementById('splashHand').style.display = 'none';
@@ -475,274 +321,156 @@ function startGame() {
         poster.style.display = 'none';
         document.getElementById('muteBtn').style.display = 'flex';
     }, 500);
+}
 
-    /* AUDIO */
+const splash = document.getElementById('splash');
 
+function handleFirstContact(e) {
+    if (gameActive) return;
+    if (e.cancelable) e.preventDefault();
+
+    unlockAudio();
 
     const startSound = document.getElementById('soundStart');
-
-startSound.muted = false;
-startSound.currentTime = 0;
-
-const p = startSound.play();
-
-if (p) {
-    p.catch(() => {
-        // fallback: спроба повтору
-        setTimeout(() => {
-            startSound.play().catch(() => {});
-        }, 100);
-    });
-}
-
-    ['soundFinish', 'soundScrub'].forEach(id => {
-        document.getElementById(id).muted = false;
-    });
-
     const bgMusic = document.getElementById('bgMusic');
-    bgMusic.muted = false;
-    bgMusic.volume = 0.5; // гучність фону
-    bgMusic.currentTime = 0;
-    bgMusic.play().catch(() => {});
-}
+    const scrubSound = document.getElementById('soundScrub');
 
-/* SPLASH TAP */
+    startSound.currentTime = 0;
+    startSound.play().catch(err => console.log("VO Error:", err));
 
-document.getElementById('splash')
-.addEventListener('pointerdown', (e) => {
-
-    e.preventDefault();
-    unlockAudio();
-    forceAudioKick();
     startGame();
+    bgMusic.play().catch(() => {});
+    bgMusic.volume = 0.4;
+    const r = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
+    lastX = clientX - r.left;
+    lastY = clientY - r.top;
     drawing = true;
 
-    const r = canvas.getBoundingClientRect();
-
-    lastX = e.clientX - r.left;
-    lastY = e.clientY - r.top;
-
     if (!isMuted) {
-
-        const soundScrub =
-            document.getElementById('soundScrub');
-
-        soundScrub.currentTime = 0;
-
-        soundScrub.play().catch(() => {});
+        scrubSound.currentTime = 0;
+        scrubSound.play().catch(() => {});
     }
+    
+    handleMove(lastX, lastY);
+}
 
-}, { passive: false });
-
-/* MOVE */
+splash.addEventListener('touchstart', handleFirstContact, { passive: false });
+splash.addEventListener('mousedown', handleFirstContact);
 
 function handleMove(x, y) {
-
     if (!gameActive || finished) return;
 
-    currentX = x;
-    currentY = y;
-
-    const gSponge =
-        document.getElementById('splashSponge');
-
+    const gSponge = document.getElementById('splashSponge');
     gSponge.style.left = x + 'px';
     gSponge.style.top = y + 'px';
-
-    gSponge.style.transform =
-        'translate(-50%, -50%) rotate(-15deg)';
+    gSponge.style.transform = 'translate(-50%, -50%) rotate(-15deg)';
 
     if (!drawing) return;
 
     ctx.globalCompositeOperation = 'destination-out';
-
     ctx.shadowBlur = 25;
     ctx.shadowColor = 'black';
 
     if (lastX !== null) {
-
         const dx = x - lastX;
         const dy = y - lastY;
-
         const dist = Math.sqrt(dx * dx + dy * dy);
-
-        const steps = Math.max(1,
-            Math.floor(dist / 5));
+        const steps = Math.max(1, Math.floor(dist / 5));
 
         for (let i = 0; i <= steps; i++) {
-
             const tx = lastX + (dx * i / steps);
             const ty = lastY + (dy * i / steps);
-
-            ctx.drawImage(
-                brush,
-                tx - 75,
-                ty - 75,
-                150,
-                150
-            );
+            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
         }
     }
 
     lastX = x;
     lastY = y;
 
-    if (Math.random() > 0.9) {
-        checkProgress();
-    }
-
+    if (Math.random() > 0.9) checkProgress();
     ctx.shadowBlur = 0;
 }
 
-/* CHECK PROGRESS */
-
 function checkProgress() {
-
-    const pixels =
-        ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        ).data;
-
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     let clear = 0;
-
     for (let i = 3; i < pixels.length; i += 400) {
         if (pixels[i] < 150) clear++;
     }
-
-    const pct =
-        (clear / (pixels.length / 400)) * 100;
-
-    if (pct > 80) {
-        finishGame();
-    }
+    const pct = (clear / (pixels.length / 400)) * 100;
+    if (pct > 80) finishGame();
 }
 
-/* FINISH */
-
 function finishGame() {
-
     if (finished) return;
-
     finished = true;
-
     drawing = false;
 
-    document.getElementById('splashSponge')
-        .style.display = 'none';
-    
-const center = getCanvasPos(
-    window.innerWidth / 2,
-    window.innerHeight / 2
-);
-
-spawnWaterDrops(center.x, center.y, 120);
-
-    if (!isMuted) {
-        document.getElementById('soundFinish')
-            .play()
-            .catch(() => {});
-    }
+    document.getElementById('splashSponge').style.display = 'none';
+    document.getElementById('soundScrub').pause();
+    spawnWaterDrops(canvas.width / 2, canvas.height / 2, 120);
 
     setTimeout(() => {
         const wow = document.getElementById('wowEffect');
         wow.classList.add('visible'); 
 
-        setTimeout(() => {
-            wow.style.animation = 'pulse 1.8s infinite';
-        }, 800); 
+        if (!isMuted) {
+            const finishSound = document.getElementById('soundFinish');
+            finishSound.muted = false;
+            finishSound.currentTime = 0;
+            finishSound.play().catch(() => {});
+        }
     }, 500);
 
     setTimeout(() => {
-
-        const btn =
-            document.getElementById('ctaButton');
-
+        const btn = document.getElementById('ctaButton');
         btn.style.display = 'block';
-
-        btn.onclick = () => {
-            window.open('https://honeytoon.com/comic-video/teach-me-first?n=1', '_self');
+        btn.classList.add('pulse-anim');
+        btn.onclick = () => { 
+            window.open('https://honeytoon.com/comic-video/teach-me-first?n=1', '_self'); 
         };
-
     }, 1500);
 
     setTimeout(() => {
 
-        document.getElementById('overlay')
-            .style.opacity = '1';
-
-        document.getElementById('bgAnimation')
-            .style.filter =
-                'blur(0px) brightness(0.6)';
-
-    }, 3000);
+        document.getElementById('overlay').style.opacity = '1';
+ 
+        document.getElementById('bgAnimation').style.filter = 'blur(2px) brightness(0.6)';
+   
+        const wow = document.getElementById('wowEffect');
+        wow.style.filter = 'brightness(0.6)'; 
+        // Також можна трохи зменшити прозорість, якщо потрібно:
+        // wow.style.opacity = '0.8';
+    }, 2500);
 }
 
-/* SCRUB SOUND */
-
-const soundScrub =
-    document.getElementById('soundScrub');
-
-soundScrub.volume = 0.3;
-
-/* CANVAS EVENTS */
-
 canvas.addEventListener('pointerdown', e => {
-
-    if (!gameActive) return;
-
+    if (!gameActive || finished) return;
     drawing = true;
-
-    if (!isMuted) {
-
-        soundScrub.currentTime = 0;
-
-        soundScrub.play()
-            .catch(() => {});
-    }
-
     const r = canvas.getBoundingClientRect();
-
     lastX = e.clientX - r.left;
     lastY = e.clientY - r.top;
+    if (!isMuted) document.getElementById('soundScrub').play().catch(() => {});
 });
-
-/* MOVE */
 
 window.addEventListener('pointermove', e => {
-
+    if (!gameActive) return;
     const r = canvas.getBoundingClientRect();
-
-    handleMove(
-        e.clientX - r.left,
-        e.clientY - r.top
-    );
+    handleMove(e.clientX - r.left, e.clientY - r.top);
 });
-
-/* UP */
 
 window.addEventListener('pointerup', () => {
-
     drawing = false;
-
     lastX = null;
-    lastY = null;
-
-    soundScrub.pause();
+    document.getElementById('soundScrub').pause();
 });
 
-/* VIDEO PRELOAD */
-
 window.addEventListener('load', () => {
-
-    const v =
-        document.getElementById('bgAnimation');
-
+    const v = document.getElementById('bgAnimation');
     v.muted = true;
-
     v.play().catch(() => {});
 });
 
@@ -755,205 +483,78 @@ function initFog() {
     };
 }
 
-/* RESIZE */
-
 function resize() {
-
     canvas.width = canvas.parentElement.offsetWidth;
     canvas.height = canvas.parentElement.offsetHeight;
     fxCanvas.width = canvas.width;
     fxCanvas.height = canvas.height;
     initFog();
-    const fog = new Image();
-
-    fog.src = 'assets/fog.webp';
-
-    fog.onload = () => {
-
-        ctx.drawImage(
-            fog,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
-        ctx.globalCompositeOperation = 'destination-out';
-    };
 }
 
 window.addEventListener('resize', resize);
-
 resize();
 
-/* MUTE */
-
-document.getElementById('muteBtn')
-.addEventListener('pointerdown', (e) => {
-
+document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
     e.stopPropagation();
-
     isMuted = !isMuted;
-
-    document.querySelectorAll('audio')
-        .forEach(a => a.muted = isMuted);
-
-    document.getElementById('muteBtn')
-        .innerText = isMuted ? '🔇' : '🔊';
+    document.querySelectorAll('audio').forEach(a => a.muted = isMuted);
+    document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
 });
 
 /* PARTICLES */
-
 class Drop {
     constructor(x, y) {
-
-        this.x = x;
-        this.y = y;
-
+        this.x = x; this.y = y;
         const angle = Math.random() * Math.PI * 2;
         const power = 1.5 + Math.random() * 10;
-
         this.vx = Math.cos(angle) * power;
         this.vy = Math.sin(angle) * power - Math.random() * 6;
-
         this.size = 4 + Math.random() * 10;
-
         this.gravity = 0.22;
         this.friction = 0.98;
-
         this.life = 1;
         this.decay = 0.008 + Math.random() * 0.01;
-
-        // для “stretch”
-        this.prevX = x;
-        this.prevY = y;
+        this.prevX = x; this.prevY = y;
     }
-
     update() {
-
-        this.prevX = this.x;
-        this.prevY = this.y;
-
+        this.prevX = this.x; this.prevY = this.y;
         this.vy += this.gravity;
-
-        this.x += this.vx;
-        this.y += this.vy;
-
-        this.vx *= this.friction;
-        this.vy *= this.friction;
-
-        // bounce
+        this.x += this.vx; this.y += this.vy;
+        this.vx *= this.friction; this.vy *= this.friction;
         if (this.y + this.size > fxCanvas.height) {
             this.y = fxCanvas.height - this.size;
             this.vy *= -0.35;
-            this.vx *= 0.75;
         }
-
         this.life -= this.decay;
     }
-
     draw() {
-
         const dx = this.x - this.prevX;
         const dy = this.y - this.prevY;
-
         const speed = Math.sqrt(dx * dx + dy * dy);
-
         fx.save();
-
         fx.translate(this.x, this.y);
-
-        // ✨ stretch по швидкості
         fx.rotate(Math.atan2(dy, dx));
-
         const stretch = Math.min(speed * 0.4, 6);
-
-        // основна крапля (еліпс)
         fx.beginPath();
-
         const alpha = Math.max(this.life, 0);
-
-        // основний колір води
         fx.fillStyle = `rgba(120, 200, 255, ${alpha})`;
-
-        fx.ellipse(
-            0,
-            0,
-            this.size + stretch,
-            this.size * 0.65,
-            0,
-            0,
-            Math.PI * 2
-        );
-
+        fx.ellipse(0, 0, this.size + stretch, this.size * 0.65, 0, 0, Math.PI * 2);
         fx.fill();
-
-        // 💡 highlight (блік)
-        fx.beginPath();
-        fx.fillStyle = `rgba(255,255,255,${alpha * 0.6})`;
-
-        fx.ellipse(
-            -this.size * 0.2,
-            -this.size * 0.2,
-            this.size * 0.35,
-            this.size * 0.25,
-            0,
-            0,
-            Math.PI * 2
-        );
-
-        fx.fill();
-
         fx.restore();
     }
 }
-
 function spawnWaterDrops(x, y, count = 80) {
-    for (let i = 0; i < count; i++) {
-        particles.push(new Drop(x, y));
-    }
+    for (let i = 0; i < count; i++) particles.push(new Drop(x, y));
 }
-
 function fxLoop() {
-
     fx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-
     particles.forEach((p, i) => {
-
-        p.update();
-        p.draw();
-
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-        }
+        p.update(); p.draw();
+        if (p.life <= 0) particles.splice(i, 1);
     });
-
     requestAnimationFrame(fxLoop);
 }
-
 fxLoop();
-
-function getCanvasPos(clientX, clientY) {
-
-    const r = fxCanvas.getBoundingClientRect();
-
-    return {
-        x: (clientX - r.left) * (fxCanvas.width / r.width),
-        y: (clientY - r.top) * (fxCanvas.height / r.height)
-    };
-}
-
-function getFxPos(clientX, clientY) {
-
-    const r = fxCanvas.getBoundingClientRect();
-
-    return {
-        x: (clientX - r.left) * (fxCanvas.width / r.width),
-        y: (clientY - r.top) * (fxCanvas.height / r.height)
-    };
-}
-
 </script>
 
 </body>
