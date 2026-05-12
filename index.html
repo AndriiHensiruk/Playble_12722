@@ -3,14 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <title>Shower Playable</title>
+    <title>Shower Playable Final</title>
     <style>
         html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
         #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
         #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
         @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
-        .bg-img, #canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-        #canvas { z-index: 5; background: transparent; }
+        
+        /* ШАРИ (Z-INDEX) */
+        .bg-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; transition: filter 1s ease; }
+        #canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; background: transparent; }
+        
+        /* WOW Effect - тепер під оверлеєм */
+        #wowEffect { position: absolute; z-index: 10; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%) scale(0.5); opacity: 0; transition: 0.5s; }
+        #wowEffect.visible { opacity: 1; animation: wowPulse 3.8s ease-in-out infinite; }
+        
+        /* Overlay - затемнює все, що нижче z-index 15 */
+        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 15; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
+        
+        /* CTA Button - над затемненням */
+        #ctaButton { display: none; position: absolute; z-index: 20; bottom: 15%; left: 50%; width: 80%; transform: translateX(-50%); animation: pulse 1.8s infinite; cursor: pointer; }
+        
+        /* Сплеш-екран */
         #splash { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; }
         #splashSpongeContainer { position: relative; width: 100%; height: 100%; animation: spongePulseGlow 3s infinite ease-in-out; }
         #splashSponge { position: absolute; width: 180px; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-15deg); z-index: 105; pointer-events: none; }
@@ -18,11 +32,8 @@
         #splashHand { position: absolute; width: 90px; left: 50%; top: 50%; z-index: 106; animation: handTapBetter 1.5s infinite ease-in-out; }
         #clickLines { position: absolute; width: 80px; left: 50%; top: 50%; z-index: 107; opacity: 0; transform: scale(0); animation: clickRays 1.5s infinite ease-in-out; }
         #splashCaption { position: absolute; bottom: 22%; width: 70%; z-index: 108; animation: captionPulse 2.5s infinite ease-in-out; }
+        
         #muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; font-size: 24px; cursor: pointer; }
-        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,.8); z-index: 15; opacity: 0; transition: opacity .8s ease; }
-        #wowEffect { position: absolute; z-index: 20; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%) scale(0.5); opacity: 0; transition: .5s; }
-        #wowEffect.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        #ctaButton { display: none; position: absolute; z-index: 21; bottom: 15%; left: 50%; width: 80%; transform: translateX(-50%); animation: pulse 1.8s infinite; cursor: pointer; }
         #fxCanvas { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
 
         @keyframes clickRays { 0%,45% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 65% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
@@ -31,6 +42,11 @@
         @keyframes blink { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
         @keyframes pulse { 0%,100% { transform: scale(1) translateX(-50%); } 50% { transform: scale(1.05) translateX(-50%); } }
         @keyframes captionPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        @keyframes wowPulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.15); } 
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -86,7 +102,6 @@
     const soundFinish = document.getElementById('soundFinish');
     const soundScrub = document.getElementById('soundScrub');
 
-    // 1. РОЗБЛОКУВАННЯ (Silent Play)
     function unlockAudio() {
         if (audioUnlocked) return;
         const allAudio = [bgMusic, soundScrub, soundStart, soundFinish];
@@ -94,38 +109,28 @@
             audio.muted = false;
             audio.volume = 0;
             audio.play().then(() => {
-                // Якщо це не музика і не тертя, зразу стоп
                 if (audio !== bgMusic && audio !== soundScrub) {
                     audio.pause();
                     audio.currentTime = 0;
                 }
                 audio.volume = 1;
-            }).catch(e => console.log("Unlock sync..."));
+            }).catch(() => {});
         });
         audioUnlocked = true;
     }
 
-    // 2. ПОСЛІДОВНИЙ ЗАПУСК
     function startGame() {
         if (gameActive) return;
         gameActive = true;
-
         const video = document.getElementById('bgAnimation');
         const poster = document.getElementById('staticPoster');
 
         if (!isMuted) {
-            // Музика вже активована в unlockAudio, ставимо гучність
             bgMusic.volume = 0.4;
-            // Вигук через паузу, щоб не конфліктувати
-            setTimeout(() => {
-                soundStart.play().catch(() => {});
-            }, 400);
+            setTimeout(() => { soundStart.play().catch(() => {}); }, 400);
         }
 
-        video.play().catch(() => {
-            video.muted = true;
-            video.play();
-        });
+        video.play().catch(() => { video.muted = true; video.play(); });
 
         document.getElementById('splashCaption').style.display = 'none';
         document.getElementById('splashOutline').style.display = 'none';
@@ -139,18 +144,12 @@
         }, 300);
     }
 
-    // 3. ОБРОБНИКИ ПОДІЙ
     function pointerStart(e) {
         unlockAudio();
         if (!gameActive) startGame();
         if (finished) return;
-
         drawing = true;
-        if (!isMuted) {
-            soundScrub.volume = 1;
-            soundScrub.play().catch(() => {});
-        }
-
+        if (!isMuted) { soundScrub.volume = 1; soundScrub.play().catch(() => {}); }
         const { x, y } = getCoords(e);
         lastX = x; lastY = y;
         handleMove(x, y);
@@ -202,19 +201,25 @@
         document.getElementById('splashSponge').style.display = 'none';
         soundScrub.pause();
         spawnWaterDrops(canvas.width / 2, canvas.height / 2, 120);
+
+        // 1. Поява WOW
         setTimeout(() => {
             document.getElementById('wowEffect').classList.add('visible');
-            if (!isMuted) soundFinish.play().catch(() => {});
-        }, 500);
+            if (!isMuted) { soundFinish.currentTime = 0; soundFinish.play().catch(() => {}); }
+        }, 300);
+
+        // 2. Затемнення всього (включаючи WOW)
+        setTimeout(() => {
+            document.getElementById('overlay').style.opacity = '1';
+            document.getElementById('bgAnimation').style.filter = 'blur(5px) brightness(0.4)';
+        }, 1000);
+
+        // 3. CTA кнопка над затемненням
         setTimeout(() => {
             const btn = document.getElementById('ctaButton');
             btn.style.display = 'block';
             btn.onclick = () => window.open('https://honeytoon.com/comic-video/teach-me-first?n=1', '_self');
-        }, 1500);
-        setTimeout(() => {
-            document.getElementById('overlay').style.opacity = '1';
-            document.getElementById('bgAnimation').style.filter = 'blur(2px) brightness(0.6)';
-        }, 2500);
+        }, 2000);
     }
 
     function getCoords(e) {
