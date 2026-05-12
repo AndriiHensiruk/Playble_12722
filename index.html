@@ -16,7 +16,7 @@
         
         /* WOW Effect - тепер під оверлеєм */
         #wowEffect { position: absolute; z-index: 10; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%) scale(0.5); opacity: 0; transition: 0.5s; }
-        #wowEffect.visible { opacity: 1; animation: wowPulse 3.8s ease-in-out infinite; }
+        #wowEffect.visible { opacity: 1; animation: wowPulse 4.8s ease-in-out infinite; }
         
         /* Overlay - затемнює все, що нижче z-index 15 */
         #overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); z-index: 15; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
@@ -81,7 +81,7 @@
 <audio id="soundScrub" src="assets/scrub.mp3" loop preload="auto"></audio>
 
 <script>
-    const fxCanvas = document.getElementById('fxCanvas');
+const fxCanvas = document.getElementById('fxCanvas');
     const fx = fxCanvas.getContext('2d');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -92,46 +92,57 @@
     let drawing = false;
     let finished = false;
     let gameActive = false;
-    let lastX = null;
-    let lastY = null;
+    let lastX = null, lastY = null;
     let isMuted = false;
     let audioUnlocked = false;
 
+    // Отримуємо посилання на аудіо
     const bgMusic = document.getElementById('bgMusic');
     const soundStart = document.getElementById('soundStart');
     const soundFinish = document.getElementById('soundFinish');
     const soundScrub = document.getElementById('soundScrub');
 
+    // Функція розблокування звуку
     function unlockAudio() {
         if (audioUnlocked) return;
-        const allAudio = [bgMusic, soundScrub, soundStart, soundFinish];
-        allAudio.forEach(audio => {
-            audio.muted = false;
-            audio.volume = 0;
-            audio.play().then(() => {
-                if (audio !== bgMusic && audio !== soundScrub) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                }
-                audio.volume = 1;
-            }).catch(() => {});
-        });
-        audioUnlocked = true;
+
+        // 1. Створюємо/відновлюємо аудіо-контекст (важливо для мобільних)
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+            const context = new AudioContext();
+            if (context.state === 'suspended') context.resume();
+        }
+
+        // 2. "Прогріваємо" фонову музику
+        bgMusic.play().then(() => {
+            if (isMuted) bgMusic.muted = true;
+            audioUnlocked = true;
+        }).catch(e => console.log("Audio play blocked"));
+
+        // 3. Завантажуємо інші звуки
+        [soundStart, soundFinish, soundScrub].forEach(s => s.load());
     }
 
     function startGame() {
         if (gameActive) return;
         gameActive = true;
+        
         const video = document.getElementById('bgAnimation');
         const poster = document.getElementById('staticPoster');
 
+        // Стартовий голос
         if (!isMuted) {
             bgMusic.volume = 0.4;
-            setTimeout(() => { soundStart.play().catch(() => {}); }, 400);
+            // Невелика затримка, щоб звук встиг розблокуватись
+            setTimeout(() => { soundStart.play().catch(() => {}); }, 100);
         }
 
-        video.play().catch(() => { video.muted = true; video.play(); });
+        video.play().catch(() => { 
+            video.muted = true; 
+            video.play(); 
+        });
 
+        // Ховаємо сплеш
         document.getElementById('splashCaption').style.display = 'none';
         document.getElementById('splashOutline').style.display = 'none';
         document.getElementById('splashHand').style.display = 'none';
@@ -145,11 +156,16 @@
     }
 
     function pointerStart(e) {
-        unlockAudio();
+        unlockAudio(); // Викликаємо при кожному першому тапі
         if (!gameActive) startGame();
         if (finished) return;
+        
         drawing = true;
-        if (!isMuted) { soundScrub.volume = 1; soundScrub.play().catch(() => {}); }
+        if (!isMuted) { 
+            soundScrub.volume = 1; 
+            soundScrub.play().catch(() => {}); 
+        }
+        
         const { x, y } = getCoords(e);
         lastX = x; lastY = y;
         handleMove(x, y);
@@ -172,7 +188,9 @@
         const sponge = document.getElementById('splashSponge');
         sponge.style.left = x + 'px';
         sponge.style.top = y + 'px';
+        
         if (!drawing) return;
+        
         ctx.globalCompositeOperation = 'destination-out';
         if (lastX !== null) {
             const dx = x - lastX; const dy = y - lastY;
@@ -197,24 +215,25 @@
 
     function finishGame() {
         if (finished) return;
-        finished = true; drawing = false;
+        finished = true; 
+        drawing = false;
         document.getElementById('splashSponge').style.display = 'none';
         soundScrub.pause();
         spawnWaterDrops(canvas.width / 2, canvas.height / 2, 120);
 
-        // 1. Поява WOW
         setTimeout(() => {
             document.getElementById('wowEffect').classList.add('visible');
-            if (!isMuted) { soundFinish.currentTime = 0; soundFinish.play().catch(() => {}); }
+            if (!isMuted) { 
+                soundFinish.currentTime = 0; 
+                soundFinish.play().catch(() => {}); 
+            }
         }, 300);
 
-        // 2. Затемнення всього (включаючи WOW)
         setTimeout(() => {
             document.getElementById('overlay').style.opacity = '1';
             document.getElementById('bgAnimation').style.filter = 'blur(5px) brightness(0.4)';
         }, 1000);
 
-        // 3. CTA кнопка над затемненням
         setTimeout(() => {
             const btn = document.getElementById('ctaButton');
             btn.style.display = 'block';
@@ -224,13 +243,13 @@
 
     function getCoords(e) {
         const r = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / r.width;
-        const scaleY = canvas.height / r.height;
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: (clientX - r.left) * scaleX, y: (clientY - r.top) * scaleY };
+        // Використовуємо спрощені координати для кращої сумісності
+        return { x: clientX - r.left, y: clientY - r.top };
     }
 
+    // Слухаємо події на всьому документі для розблокування звуку
     document.addEventListener('touchstart', pointerStart, { passive: false });
     document.addEventListener('touchmove', pointerMove, { passive: false });
     document.addEventListener('touchend', pointerEnd);
@@ -240,23 +259,33 @@
 
     function initFog() {
         const fog = new Image(); fog.src = 'assets/fog.webp';
-        fog.onload = () => { ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(fog, 0, 0, canvas.width, canvas.height); };
+        fog.onload = () => { 
+            ctx.globalCompositeOperation = 'source-over'; 
+            ctx.drawImage(fog, 0, 0, canvas.width, canvas.height); 
+        };
     }
+
     function resize() {
-        canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight;
-        fxCanvas.width = canvas.width; fxCanvas.height = canvas.height;
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        fxCanvas.width = rect.width;
+        fxCanvas.height = rect.height;
         initFog();
     }
+
     window.addEventListener('load', resize);
     window.addEventListener('resize', resize);
-    resize();
-
+    
+    // Кнопка звуку
     document.getElementById('muteBtn').addEventListener('pointerdown', e => {
-        e.stopPropagation(); isMuted = !isMuted;
+        e.stopPropagation(); 
+        isMuted = !isMuted;
         [bgMusic, soundStart, soundFinish, soundScrub].forEach(a => a.muted = isMuted);
         document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
     });
 
+    // Ефекти крапель (Drop class та fxLoop залишаються без змін)
     class Drop {
         constructor(x, y) {
             this.x = x; this.y = y;
