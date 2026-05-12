@@ -1,229 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Shower Playable Final</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>Shower Playable</title>
+    <style>
+        html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
+        #wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
+        #container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
+        @media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
+        .bg-img, #canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+        #canvas { z-index: 5; background: transparent; }
+        #splash { position: absolute; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: center; }
+        #splashSpongeContainer { position: relative; width: 100%; height: 100%; animation: spongePulseGlow 3s infinite ease-in-out; }
+        #splashSponge { position: absolute; width: 180px; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-15deg); z-index: 105; pointer-events: none; }
+        #splashOutline { position: absolute; width: 145px; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-15deg); z-index: 110; animation: blink 1s infinite; }
+        #splashHand { position: absolute; width: 90px; left: 50%; top: 50%; z-index: 106; animation: handTapBetter 1.5s infinite ease-in-out; }
+        #clickLines { position: absolute; width: 80px; left: 50%; top: 50%; z-index: 107; opacity: 0; transform: scale(0); animation: clickRays 1.5s infinite ease-in-out; }
+        #splashCaption { position: absolute; bottom: 22%; width: 70%; z-index: 108; animation: captionPulse 2.5s infinite ease-in-out; }
+        #muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; font-size: 24px; cursor: pointer; }
+        #overlay { position: absolute; inset: 0; background: rgba(0,0,0,.8); z-index: 15; opacity: 0; transition: opacity .8s ease; }
+        #wowEffect { position: absolute; z-index: 20; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%) scale(0.5); opacity: 0; transition: .5s; }
+        #wowEffect.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        #ctaButton { display: none; position: absolute; z-index: 21; bottom: 15%; left: 50%; width: 80%; transform: translateX(-50%); animation: pulse 1.8s infinite; cursor: pointer; }
+        #fxCanvas { position: absolute; inset: 0; z-index: 60; pointer-events: none; }
 
-<style>
-html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #000;
-    touch-action: none;
-    font-family: sans-serif;
-}
-
-#wrapper {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#container {
-    position: relative;
-    height: 100vh;
-    width: calc(100vh * 9 / 16);
-    max-width: 100vw;
-    max-height: calc(100vw * 16 / 9);
-    overflow: hidden;
-}
-
-@media (max-aspect-ratio: 9/16) {
-    #container {
-        width: 100vw;
-        height: calc(100vw * 16 / 9);
-    }
-}
-
-.bg-img,
-#canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#canvas {
-    z-index: 5;
-    filter: brightness(1.1) contrast(1.1);
-    background: transparent;
-}
-
-/* SPLASH */
-#splash {
-    position: absolute;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    pointer-events: auto;
-}
-
-#splashSpongeContainer {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    z-index: 102;
-    animation: spongePulseGlow 3s infinite ease-in-out;
-}
-
-#splashSponge {
-    position: absolute;
-    width: 180px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotate(-15deg);
-    pointer-events: none;
-    z-index: 105;
-}
-
-#splashOutline {
-    position: absolute;
-    width: 145px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotate(-15deg);
-    animation: blink 1s infinite;
-    z-index: 110;
-}
-
-#splashHand {
-    position: absolute;
-    width: 90px;
-    left: 50%;
-    top: 50%;
-    z-index: 106;
-    animation: handTapBetter 1.5s infinite ease-in-out;
-    transition: opacity .3s ease;
-}
-
-#clickLines {
-    position: absolute;
-    width: 80px;
-    left: 50%;
-    top: 50%;
-    z-index: 107;
-    pointer-events: none;
-    opacity: 0;
-    transform: scale(0);
-    animation: clickRays 1.5s infinite ease-in-out;
-}
-
-#splashCaption {
-    position: absolute;
-    bottom: 22%;
-    width: 70%;
-    z-index: 108;
-    animation: captionPulse 2.5s infinite ease-in-out;
-}
-
-/* GAME UI */
-#muteBtn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    width: 45px;
-    height: 45px;
-    background: rgba(0,0,0,.6);
-    border-radius: 50%;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 24px;
-    border: 2px solid rgba(255,255,255,.2);
-}
-
-#overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,.8);
-    z-index: 15;
-    opacity: 0;
-    transition: opacity .8s ease;
-    pointer-events: none;
-}
-
-#wowEffect {
-    position: absolute;
-    z-index: 20;
-    width: 40%; 
-    top: 45%;   
-    left: 70%; 
-    transform: translate(-50%, -50%) scale(0.5); 
-    opacity: 0; 
-    pointer-events: none; 
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, filter 0.8s ease;
-    filter: brightness(1);
-}
-#ctaButton {
-    display: none;
-    position: absolute;
-    z-index: 21;
-    bottom: 15%;
-    left: 10%;
-    width: 80%;
-    transform: translate(-50%);
-    animation: pulse 1.8s infinite;
-}
-
-#wowEffect.visible {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    animation: wowPulse 2.5s infinite ease-in-out;
-}
-
-#fxCanvas {
-    position: absolute;
-    inset: 0;
-    z-index: 60;
-    pointer-events: none;
-}
-
-/* ANIMATIONS */
-@keyframes clickRays {
-    0%,45% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-    65% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-    100% { opacity: 0; }
-}
-@keyframes spongePulseGlow {
-    0%,100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,255,255,0)); }
-    50% { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(255,255,255,.8)); }
-}
-@keyframes handTapBetter {
-    0%,100% { transform: translate(40px,120px); opacity: 0; }
-    50% { transform: translate(0,0); opacity: 1; }
-    70% { transform: translate(0,0) scale(.85); opacity: 1; }
-}
-@keyframes blink {
-    0%,100% { opacity: .3; }
-    50% { opacity: 1; }
-}
-@keyframes pulse {
-    0%,100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-@keyframes captionPulse {
-    0%,100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.03); opacity: .8; }
-}
-@keyframes wowPulse {
-    0%, 100% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.08); }
-}
-</style>
+        @keyframes clickRays { 0%,45% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } 65% { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+        @keyframes spongePulseGlow { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        @keyframes handTapBetter { 0%,100% { transform: translate(40px,120px); opacity: 0; } 50% { transform: translate(0,0); opacity: 1; } 70% { transform: translate(0,0) scale(.85); opacity: 1; } }
+        @keyframes blink { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+        @keyframes pulse { 0%,100% { transform: scale(1) translateX(-50%); } 50% { transform: scale(1.05) translateX(-50%); } }
+        @keyframes captionPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+    </style>
 </head>
-
 <body>
+
 <canvas id="fxCanvas"></canvas>
 <div id="wrapper">
     <div id="container">
@@ -232,7 +43,6 @@ html, body {
             <source src="assets/Comp 1.webm" type="video/webm">
         </video>
         <canvas id="canvas"></canvas>
-
         <div id="splash">
             <div id="splashSpongeContainer">
                 <img src="assets/sponge_outline.webp" id="splashOutline">
@@ -242,7 +52,6 @@ html, body {
             </div>
             <img src="assets/caption.webp" id="splashCaption">
         </div>
-
         <div id="muteBtn">🔊</div>
         <div id="overlay"></div>
         <img src="assets/wow.webp" id="wowEffect">
@@ -250,349 +59,229 @@ html, body {
     </div>
 </div>
 
-<audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
-<audio id="soundStart" src="assets/vo_start.mp3" playsinline></audio>
-<audio id="soundFinish" src="assets/vo_finish.mp3" playsinline></audio>
-<audio id="soundScrub" src="assets/scrub.mp3" loop playsinline></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop preload="auto"></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" preload="auto"></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" preload="auto"></audio>
+<audio id="soundScrub" src="assets/scrub.mp3" loop preload="auto"></audio>
 
 <script>
-const fxCanvas = document.getElementById('fxCanvas');
-const fx = fxCanvas.getContext('2d');
-let particles = [];
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const fxCanvas = document.getElementById('fxCanvas');
+    const fx = fxCanvas.getContext('2d');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const brush = new Image();
+    brush.src = 'assets/sponge.webp';
 
-const brush = new Image();
-brush.src = 'assets/sponge.webp';
+    let particles = [];
+    let drawing = false;
+    let finished = false;
+    let gameActive = false;
+    let lastX = null;
+    let lastY = null;
+    let isMuted = false;
+    let audioUnlocked = false;
 
-let drawing = false;
-let isMuted = false;
-let gameActive = false;
-let finished = false;
-let lastX = null;
-let lastY = null;
+    const bgMusic = document.getElementById('bgMusic');
+    const soundStart = document.getElementById('soundStart');
+    const soundFinish = document.getElementById('soundFinish');
+    const soundScrub = document.getElementById('soundScrub');
 
-let audioUnlocked = false;
-
-function unlockAudio() {
-    if (audioUnlocked) return;
-    audioUnlocked = true;
-
-    const bgMusic    = document.getElementById('bgMusic');
-    const startSound = document.getElementById('soundStart');
-    const scrubSound = document.getElementById('soundScrub');
-    const finSound   = document.getElementById('soundFinish');
-
-    [bgMusic, startSound, scrubSound, finSound].forEach(el => {
-        el.muted = true;
-        el.play().then(() => {
-            el.pause();
-            el.currentTime = 0;
-            el.muted = false;
-        }).catch(() => { el.muted = false; });
-    });
-}
-
-function handleFirstContact(e) {
-    if (gameActive) return;
-    if (e.cancelable) e.preventDefault();
-
-    unlockAudio();
-
-    const bgMusic    = document.getElementById('bgMusic');
-    const startSound = document.getElementById('soundStart');
-
-    bgMusic.volume = 0.4;
-    bgMusic.currentTime = 0;
-    bgMusic.play().catch(() => {
-        setTimeout(() => bgMusic.play().catch(() => {}), 300);
-    });
-
-    startSound.currentTime = 0;
-    startSound.play().catch(() => {
-        setTimeout(() => startSound.play().catch(() => {}), 300);
-    });
-
-    startGame();
-}
-
-function startGame() {
-    if (gameActive) return;
-    gameActive = true;
-
-    const video = document.getElementById('bgAnimation');
-    const poster = document.getElementById('staticPoster');
-    
-    document.getElementById('splashSpongeContainer').style.animation = 'none';
-
-    video.play().catch(() => {
-        video.muted = true;
-        video.play();
-    });
-
-    video.style.opacity = '1';
-    document.getElementById('splashCaption').style.display = 'none';
-    document.getElementById('splashOutline').style.display = 'none';
-    document.getElementById('splashHand').style.display = 'none';
-    document.getElementById('clickLines').style.display = 'none';
-    document.getElementById('splash').style.pointerEvents = 'none';
-
-    setTimeout(() => {
-        poster.style.display = 'none';
-        document.getElementById('muteBtn').style.display = 'flex';
-    }, 500);
-}
-
-function handleMove(x, y) {
-    if (!gameActive || finished) return;
-
-    const gSponge = document.getElementById('splashSponge');
-    gSponge.style.left = x + 'px';
-    gSponge.style.top = y + 'px';
-    gSponge.style.transform = 'translate(-50%, -50%) rotate(-15deg)';
-
-    if (!drawing) return;
-
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = 'black';
-
-    if (lastX !== null) {
-        const dx = x - lastX;
-        const dy = y - lastY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const steps = Math.max(1, Math.floor(dist / 5));
-
-        for (let i = 0; i <= steps; i++) {
-            const tx = lastX + (dx * i / steps);
-            const ty = lastY + (dy * i / steps);
-            ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
-        }
+    // 1. РОЗБЛОКУВАННЯ (Silent Play)
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        const allAudio = [bgMusic, soundScrub, soundStart, soundFinish];
+        allAudio.forEach(audio => {
+            audio.muted = false;
+            audio.volume = 0;
+            audio.play().then(() => {
+                // Якщо це не музика і не тертя, зразу стоп
+                if (audio !== bgMusic && audio !== soundScrub) {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }
+                audio.volume = 1;
+            }).catch(e => console.log("Unlock sync..."));
+        });
+        audioUnlocked = true;
     }
 
-    lastX = x;
-    lastY = y;
+    // 2. ПОСЛІДОВНИЙ ЗАПУСК
+    function startGame() {
+        if (gameActive) return;
+        gameActive = true;
 
-    if (Math.random() > 0.9) checkProgress();
-    ctx.shadowBlur = 0;
-}
-
-function checkProgress() {
-    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-    let clear = 0;
-    for (let i = 3; i < pixels.length; i += 400) {
-        if (pixels[i] < 150) clear++;
-    }
-    const pct = (clear / (pixels.length / 400)) * 100;
-    if (pct > 80) finishGame();
-}
-
-function finishGame() {
-    if (finished) return;
-    finished = true;
-    drawing = false;
-
-    document.getElementById('splashSponge').style.display = 'none';
-    document.getElementById('soundScrub').pause();
-    spawnWaterDrops(canvas.width / 2, canvas.height / 2, 120);
-
-    setTimeout(() => {
-        const wow = document.getElementById('wowEffect');
-        wow.classList.add('visible'); 
+        const video = document.getElementById('bgAnimation');
+        const poster = document.getElementById('staticPoster');
 
         if (!isMuted) {
-            const finishSound = document.getElementById('soundFinish');
-            finishSound.muted = false;
-            finishSound.currentTime = 0;
-            finishSound.play().catch(() => {});
+            // Музика вже активована в unlockAudio, ставимо гучність
+            bgMusic.volume = 0.4;
+            // Вигук через паузу, щоб не конфліктувати
+            setTimeout(() => {
+                soundStart.play().catch(() => {});
+            }, 400);
         }
-    }, 500);
 
-    setTimeout(() => {
-        const btn = document.getElementById('ctaButton');
-        btn.style.display = 'block';
-        btn.classList.add('pulse-anim');
-        btn.onclick = () => { 
-            window.open('https://honeytoon.com/comic-video/teach-me-first?n=1', '_self'); 
-        };
-    }, 1500);
+        video.play().catch(() => {
+            video.muted = true;
+            video.play();
+        });
 
-    setTimeout(() => {
-        document.getElementById('overlay').style.opacity = '1';
-        document.getElementById('bgAnimation').style.filter = 'blur(2px) brightness(0.6)';
-        const wow = document.getElementById('wowEffect');
-        wow.style.filter = 'brightness(0.6)';
-    }, 2500);
-}
+        document.getElementById('splashCaption').style.display = 'none';
+        document.getElementById('splashOutline').style.display = 'none';
+        document.getElementById('splashHand').style.display = 'none';
+        document.getElementById('clickLines').style.display = 'none';
+        document.getElementById('splash').style.pointerEvents = 'none';
 
-function getCoords(e) {
-    const r = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / r.width;
-    const scaleY = canvas.height / r.height;
-    
-    if (e.touches && e.touches.length > 0) {
-        return {
-            x: (e.touches[0].clientX - r.left) * scaleX,
-            y: (e.touches[0].clientY - r.top) * scaleY
-        };
-    }
-    return {
-        x: (e.clientX - r.left) * scaleX,
-        y: (e.clientY - r.top) * scaleY
-    };
-}
-
-document.addEventListener('touchstart', e => {
-    if (e.cancelable) e.preventDefault();
-
-    if (!gameActive) {
-        handleFirstContact(e);
+        setTimeout(() => {
+            poster.style.display = 'none';
+            document.getElementById('muteBtn').style.display = 'flex';
+        }, 300);
     }
 
-    if (finished) return;
+    // 3. ОБРОБНИКИ ПОДІЙ
+    function pointerStart(e) {
+        unlockAudio();
+        if (!gameActive) startGame();
+        if (finished) return;
 
-    drawing = true;
-    const { x, y } = getCoords(e);
-    lastX = x;
-    lastY = y;
-
-    const scrub = document.getElementById('soundScrub');
-    if (!isMuted) { scrub.currentTime = 0; scrub.play().catch(() => {}); }
-
-    handleMove(x, y);
-
-}, { passive: false });
-
-document.addEventListener('touchmove', e => {
-    if (e.cancelable) e.preventDefault();
-    if (!gameActive || finished || !drawing) return;
-
-    const { x, y } = getCoords(e);
-    handleMove(x, y);
-
-}, { passive: false });
-
-document.addEventListener('touchend', () => {
-    drawing = false;
-    lastX = null;
-    document.getElementById('soundScrub').pause();
-});
-
-document.addEventListener('mousedown', e => {
-    if (!gameActive) {
-        handleFirstContact(e);
-        return;
-    }
-    if (finished) return;
-    drawing = true;
-    const { x, y } = getCoords(e);
-    lastX = x;
-    lastY = y;
-    const scrub = document.getElementById('soundScrub');
-    if (!isMuted) { scrub.currentTime = 0; scrub.play().catch(() => {}); }
-    handleMove(x, y);
-});
-
-document.addEventListener('mousemove', e => {
-    if (!gameActive || finished || !drawing) return;
-    const { x, y } = getCoords(e);
-    handleMove(x, y);
-});
-
-document.addEventListener('mouseup', () => {
-    drawing = false;
-    lastX = null;
-    document.getElementById('soundScrub').pause();
-});
-
-window.addEventListener('load', () => {
-    const v = document.getElementById('bgAnimation');
-    v.muted = true;
-    v.play().catch(() => {});
-});
-
-function initFog() {
-    const fog = new Image();
-    fog.src = 'assets/fog.webp';
-    fog.onload = () => {
-        ctx.globalCompositeOperation = 'source-over'; 
-        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
-    };
-}
-
-function resize() {
-    canvas.width = canvas.parentElement.offsetWidth;
-    canvas.height = canvas.parentElement.offsetHeight;
-    fxCanvas.width = canvas.width;
-    fxCanvas.height = canvas.height;
-    initFog();
-}
-
-window.addEventListener('resize', resize);
-resize();
-
-document.getElementById('muteBtn').addEventListener('pointerdown', (e) => {
-    e.stopPropagation();
-    isMuted = !isMuted;
-    document.querySelectorAll('audio').forEach(a => a.muted = isMuted);
-    document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
-});
-
-/* PARTICLES */
-class Drop {
-    constructor(x, y) {
-        this.x = x; this.y = y;
-        const angle = Math.random() * Math.PI * 2;
-        const power = 1.5 + Math.random() * 10;
-        this.vx = Math.cos(angle) * power;
-        this.vy = Math.sin(angle) * power - Math.random() * 6;
-        this.size = 4 + Math.random() * 10;
-        this.gravity = 0.22;
-        this.friction = 0.98;
-        this.life = 1;
-        this.decay = 0.008 + Math.random() * 0.01;
-        this.prevX = x; this.prevY = y;
-    }
-    update() {
-        this.prevX = this.x; this.prevY = this.y;
-        this.vy += this.gravity;
-        this.x += this.vx; this.y += this.vy;
-        this.vx *= this.friction; this.vy *= this.friction;
-        if (this.y + this.size > fxCanvas.height) {
-            this.y = fxCanvas.height - this.size;
-            this.vy *= -0.35;
+        drawing = true;
+        if (!isMuted) {
+            soundScrub.volume = 1;
+            soundScrub.play().catch(() => {});
         }
-        this.life -= this.decay;
+
+        const { x, y } = getCoords(e);
+        lastX = x; lastY = y;
+        handleMove(x, y);
     }
-    draw() {
-        const dx = this.x - this.prevX;
-        const dy = this.y - this.prevY;
-        const speed = Math.sqrt(dx * dx + dy * dy);
-        fx.save();
-        fx.translate(this.x, this.y);
-        fx.rotate(Math.atan2(dy, dx));
-        const stretch = Math.min(speed * 0.4, 6);
-        fx.beginPath();
-        const alpha = Math.max(this.life, 0);
-        fx.fillStyle = `rgba(120, 200, 255, ${alpha})`;
-        fx.ellipse(0, 0, this.size + stretch, this.size * 0.65, 0, 0, Math.PI * 2);
-        fx.fill();
-        fx.restore();
+
+    function pointerMove(e) {
+        if (e.cancelable) e.preventDefault();
+        const { x, y } = getCoords(e);
+        handleMove(x, y);
     }
-}
-function spawnWaterDrops(x, y, count = 80) {
-    for (let i = 0; i < count; i++) particles.push(new Drop(x, y));
-}
-function fxLoop() {
-    fx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-    particles.forEach((p, i) => {
-        p.update(); p.draw();
-        if (p.life <= 0) particles.splice(i, 1);
+
+    function pointerEnd() {
+        drawing = false;
+        lastX = null; lastY = null;
+        soundScrub.pause();
+    }
+
+    function handleMove(x, y) {
+        if (!gameActive || finished) return;
+        const sponge = document.getElementById('splashSponge');
+        sponge.style.left = x + 'px';
+        sponge.style.top = y + 'px';
+        if (!drawing) return;
+        ctx.globalCompositeOperation = 'destination-out';
+        if (lastX !== null) {
+            const dx = x - lastX; const dy = y - lastY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const steps = Math.max(1, Math.floor(dist / 5));
+            for (let i = 0; i <= steps; i++) {
+                const tx = lastX + (dx * i / steps);
+                const ty = lastY + (dy * i / steps);
+                ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
+            }
+        }
+        lastX = x; lastY = y;
+        if (Math.random() > 0.9) checkProgress();
+    }
+
+    function checkProgress() {
+        const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let clear = 0;
+        for (let i = 3; i < pixels.length; i += 400) { if (pixels[i] < 150) clear++; }
+        if ((clear / (pixels.length / 400)) * 100 > 80) finishGame();
+    }
+
+    function finishGame() {
+        if (finished) return;
+        finished = true; drawing = false;
+        document.getElementById('splashSponge').style.display = 'none';
+        soundScrub.pause();
+        spawnWaterDrops(canvas.width / 2, canvas.height / 2, 120);
+        setTimeout(() => {
+            document.getElementById('wowEffect').classList.add('visible');
+            if (!isMuted) soundFinish.play().catch(() => {});
+        }, 500);
+        setTimeout(() => {
+            const btn = document.getElementById('ctaButton');
+            btn.style.display = 'block';
+            btn.onclick = () => window.open('https://honeytoon.com/comic-video/teach-me-first?n=1', '_self');
+        }, 1500);
+        setTimeout(() => {
+            document.getElementById('overlay').style.opacity = '1';
+            document.getElementById('bgAnimation').style.filter = 'blur(2px) brightness(0.6)';
+        }, 2500);
+    }
+
+    function getCoords(e) {
+        const r = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / r.width;
+        const scaleY = canvas.height / r.height;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX - r.left) * scaleX, y: (clientY - r.top) * scaleY };
+    }
+
+    document.addEventListener('touchstart', pointerStart, { passive: false });
+    document.addEventListener('touchmove', pointerMove, { passive: false });
+    document.addEventListener('touchend', pointerEnd);
+    document.addEventListener('mousedown', pointerStart);
+    document.addEventListener('mousemove', pointerMove);
+    document.addEventListener('mouseup', pointerEnd);
+
+    function initFog() {
+        const fog = new Image(); fog.src = 'assets/fog.webp';
+        fog.onload = () => { ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(fog, 0, 0, canvas.width, canvas.height); };
+    }
+    function resize() {
+        canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight;
+        fxCanvas.width = canvas.width; fxCanvas.height = canvas.height;
+        initFog();
+    }
+    window.addEventListener('load', resize);
+    window.addEventListener('resize', resize);
+    resize();
+
+    document.getElementById('muteBtn').addEventListener('pointerdown', e => {
+        e.stopPropagation(); isMuted = !isMuted;
+        [bgMusic, soundStart, soundFinish, soundScrub].forEach(a => a.muted = isMuted);
+        document.getElementById('muteBtn').innerText = isMuted ? '🔇' : '🔊';
     });
-    requestAnimationFrame(fxLoop);
-}
-fxLoop();
-</script>
 
+    class Drop {
+        constructor(x, y) {
+            this.x = x; this.y = y;
+            const angle = Math.random() * Math.PI * 2; const power = 1.5 + Math.random() * 10;
+            this.vx = Math.cos(angle) * power; this.vy = Math.sin(angle) * power - Math.random() * 6;
+            this.size = 4 + Math.random() * 10; this.gravity = 0.22; this.friction = 0.98;
+            this.life = 1; this.decay = 0.008 + Math.random() * 0.01; this.prevX = x; this.prevY = y;
+        }
+        update() {
+            this.prevX = this.x; this.prevY = this.y;
+            this.vy += this.gravity; this.x += this.vx; this.y += this.vy;
+            this.vx *= this.friction; this.vy *= this.friction;
+            if (this.y + this.size > fxCanvas.height) { this.y = fxCanvas.height - this.size; this.vy *= -0.35; }
+            this.life -= this.decay;
+        }
+        draw() {
+            const dx = this.x - this.prevX; const dy = this.y - this.prevY; const speed = Math.sqrt(dx * dx + dy * dy);
+            fx.save(); fx.translate(this.x, this.y); fx.rotate(Math.atan2(dy, dx));
+            const stretch = Math.min(speed * 0.4, 6);
+            fx.beginPath(); fx.fillStyle = `rgba(120,200,255,${this.life})`;
+            fx.ellipse(0, 0, this.size + stretch, this.size * 0.65, 0, 0, Math.PI * 2); fx.fill(); fx.restore();
+        }
+    }
+    function spawnWaterDrops(x, y, count = 80) { for (let i = 0; i < count; i++) particles.push(new Drop(x, y)); }
+    function fxLoop() {
+        fx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+        particles.forEach((p, i) => { p.update(); p.draw(); if (p.life <= 0) particles.splice(i, 1); });
+        requestAnimationFrame(fxLoop);
+    }
+    fxLoop();
+</script>
 </body>
 </html>
