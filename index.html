@@ -272,32 +272,69 @@ let finished = false;
 let lastX = null;
 let lastY = null;
 
-
-
 let audioUnlocked = false;
 
-async function unlockAudio() {
+function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
 
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-        const audioCtx = new AudioContext();
-        if (audioCtx.state === 'suspended') {
-            await audioCtx.resume();
-        }
-    }
+    // Всі play() СИНХРОННО, без жодного await — зберігаємо gesture tick
+    const bgMusic    = document.getElementById('bgMusic');
+    const startSound = document.getElementById('soundStart');
+    const scrubSound = document.getElementById('soundScrub');
+    const finSound   = document.getElementById('soundFinish');
 
-    const sounds = ['bgMusic','soundStart','soundFinish','soundScrub'];
-    for (const id of sounds) {
-        const el = document.getElementById(id);
-        if (!el) continue;
+    // Silent unlock для iOS/Telegram: грати тихо → зупинити → зняти mute
+    [bgMusic, startSound, scrubSound, finSound].forEach(el => {
         el.muted = true;
-        try { await el.play(); } catch(e) {}
-        el.pause();
-        el.currentTime = 0;
-        el.muted = false;
-    }
+        el.play().then(() => {
+            el.pause();
+            el.currentTime = 0;
+            el.muted = false;
+        }).catch(() => { el.muted = false; });
+    });
+}
+
+function handleFirstContact(e) {
+    if (gameActive) return;
+    if (e.cancelable) e.preventDefault();
+
+    // 1. Синхронно знімаємо блокування
+    unlockAudio();
+
+    // 2. Синхронно запускаємо всі звуки — ВСЕ В ОДИН ТИК без await
+    const bgMusic    = document.getElementById('bgMusic');
+    const startSound = document.getElementById('soundStart');
+    const scrubSound = document.getElementById('soundScrub');
+
+    bgMusic.volume = 0.4;
+
+    // .play() повертає Promise але ми НЕ await-имо — просто ловимо помилки
+    bgMusic.play().catch(() => {
+        // fallback: спробуємо ще раз через 300ms якщо unlock не встиг
+        setTimeout(() => bgMusic.play().catch(() => {}), 300);
+    });
+
+    startSound.currentTime = 0;
+    startSound.play().catch(() => {
+        setTimeout(() => startSound.play().catch(() => {}), 300);
+    });
+
+    // 3. Запускаємо гру
+    startGame();
+
+    const r = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    lastX = clientX - r.left;
+    lastY = clientY - r.top;
+    drawing = true;
+
+    scrubSound.currentTime = 0;
+    scrubSound.play().catch(() => {});
+
+    handleMove(lastX, lastY);
 }
 
 function startGame() {
