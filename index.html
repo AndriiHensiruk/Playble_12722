@@ -250,10 +250,10 @@ html, body {
     </div>
 </div>
 
-<audio id="bgMusic" src="assets/music.mp3" loop muted playsinline></audio>
-<audio id="soundStart" src="assets/vo_start.mp3" muted playsinline></audio>
-<audio id="soundFinish" src="assets/vo_finish.mp3" muted playsinline></audio>
-<audio id="soundScrub" src="assets/scrub.mp3" loop muted playsinline></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop  playsinline></audio>
+<audio id="soundStart" src="assets/vo_start.mp3"  playsinline></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3"  playsinline></audio>
+<audio id="soundScrub" src="assets/scrub.mp3" loop  playsinline></audio>
 
 <script>
 const fxCanvas = document.getElementById('fxCanvas');
@@ -273,26 +273,31 @@ let lastX = null;
 let lastY = null;
 let audioUnlocked = false;
 
-// ФУНКЦІЯ РОЗБЛОКУВАННЯ АУДІО
-function unlockAudio() {
+
+let audioUnlocked = false;
+
+async function unlockAudio() {
     if (audioUnlocked) return;
     audioUnlocked = true;
 
-    // Резюме аудіоконтексту для iOS/Chrome
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (AudioContext) {
         const audioCtx = new AudioContext();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioCtx.state === 'suspended') {
+            await audioCtx.resume();
+        }
     }
 
-    // Знімаємо mute з усіх елементів
-    const sounds = [
-        document.getElementById('bgMusic'),
-        document.getElementById('soundStart'),
-        document.getElementById('soundFinish'),
-        document.getElementById('soundScrub')
-    ];
-    sounds.forEach(s => { if(s) s.muted = false; });
+    const sounds = ['bgMusic','soundStart','soundFinish','soundScrub'];
+    for (const id of sounds) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.muted = true;
+        try { await el.play(); } catch(e) {}
+        el.pause();
+        el.currentTime = 0;
+        el.muted = false;
+    }
 }
 
 function startGame() {
@@ -325,35 +330,41 @@ function startGame() {
 
 const splash = document.getElementById('splash');
 
-function handleFirstContact(e) {
+async function handleFirstContact(e) {
     if (gameActive) return;
     if (e.cancelable) e.preventDefault();
 
-    unlockAudio();
+    await unlockAudio(); // чекаємо завершення розблокування
 
     const startSound = document.getElementById('soundStart');
     const bgMusic = document.getElementById('bgMusic');
-    const scrubSound = document.getElementById('soundScrub');
-
-    startSound.currentTime = 0;
-    startSound.play().catch(err => console.log("VO Error:", err));
 
     startGame();
-    bgMusic.play().catch(() => {});
-    bgMusic.volume = 0.4;
+
+    // play() одразу після unlock, в тому ж gesture stack
+    try {
+        startSound.currentTime = 0;
+        await startSound.play();
+    } catch(err) { console.log("VO Error:", err); }
+
+    try {
+        bgMusic.volume = 0.4;
+        await bgMusic.play();
+    } catch(e) {}
+
     const r = canvas.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
     lastX = clientX - r.left;
     lastY = clientY - r.top;
     drawing = true;
 
-    if (!isMuted) {
+    const scrubSound = document.getElementById('soundScrub');
+    try {
         scrubSound.currentTime = 0;
-        scrubSound.play().catch(() => {});
-    }
-    
+        await scrubSound.play();
+    } catch(e) {}
+
     handleMove(lastX, lastY);
 }
 
@@ -447,13 +458,16 @@ function finishGame() {
     }, 2500);
 }
 
-canvas.addEventListener('pointerdown', e => {
+canvas.addEventListener('pointerdown', async e => {
     if (!gameActive || finished) return;
     drawing = true;
     const r = canvas.getBoundingClientRect();
     lastX = e.clientX - r.left;
     lastY = e.clientY - r.top;
-    if (!isMuted) document.getElementById('soundScrub').play().catch(() => {});
+    const scrub = document.getElementById('soundScrub');
+    if (!isMuted) {
+        try { await scrub.play(); } catch(e) {}
+    }
 });
 
 window.addEventListener('pointermove', e => {
