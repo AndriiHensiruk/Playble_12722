@@ -336,6 +336,8 @@ function handleFirstContact(e) {
 
     handleMove(lastX, lastY);
 }
+splash.addEventListener('touchstart', handleFirstContact, { passive: false });
+splash.addEventListener('mousedown', handleFirstContact);
 
 function startGame() {
     if (gameActive) return;
@@ -364,49 +366,6 @@ function startGame() {
         document.getElementById('muteBtn').style.display = 'flex';
     }, 500);
 }
-
-const splash = document.getElementById('splash');
-
-async function handleFirstContact(e) {
-    if (gameActive) return;
-    if (e.cancelable) e.preventDefault();
-
-    await unlockAudio(); // чекаємо завершення розблокування
-
-    const startSound = document.getElementById('soundStart');
-    const bgMusic = document.getElementById('bgMusic');
-
-    startGame();
-
-    // play() одразу після unlock, в тому ж gesture stack
-    try {
-        startSound.currentTime = 0;
-        await startSound.play();
-    } catch(err) { console.log("VO Error:", err); }
-
-    try {
-        bgMusic.volume = 0.4;
-        await bgMusic.play();
-    } catch(e) {}
-
-    const r = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    lastX = clientX - r.left;
-    lastY = clientY - r.top;
-    drawing = true;
-
-    const scrubSound = document.getElementById('soundScrub');
-    try {
-        scrubSound.currentTime = 0;
-        await scrubSound.play();
-    } catch(e) {}
-
-    handleMove(lastX, lastY);
-}
-
-splash.addEventListener('touchstart', handleFirstContact, { passive: false });
-splash.addEventListener('mousedown', handleFirstContact);
 
 function handleMove(x, y) {
     if (!gameActive || finished) return;
@@ -495,15 +454,14 @@ function finishGame() {
     }, 2500);
 }
 
-canvas.addEventListener('pointerdown', async e => {
+canvas.addEventListener('pointerdown', e => {
     if (!gameActive || finished) return;
     drawing = true;
     const r = canvas.getBoundingClientRect();
     lastX = e.clientX - r.left;
     lastY = e.clientY - r.top;
-    const scrub = document.getElementById('soundScrub');
     if (!isMuted) {
-        try { await scrub.play(); } catch(e) {}
+        document.getElementById('soundScrub').play().catch(() => {});
     }
 });
 
