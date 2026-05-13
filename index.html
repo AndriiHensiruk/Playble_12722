@@ -3,958 +3,291 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Shower Playable Final</title>
+<title>Shower Playable Final Deluxe</title>
 
 <style>
-html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #000;
-    touch-action: none;
-    font-family: sans-serif;
+html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
+#wrapper { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; }
+#container { position: relative; height: 100vh; width: calc(100vh * 9 / 16); max-width: 100vw; max-height: calc(100vw * 16 / 9); overflow: hidden; }
+
+@media (max-aspect-ratio: 9/16) { #container { width: 100vw; height: calc(100vw * 16 / 9); } }
+
+.bg-img, #canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#canvas { z-index: 10; background: transparent; }
+
+/* START SCREEN (Swipe Up) */
+#startScreen {
+    position: absolute; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.75);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    transition: opacity 0.6s ease;
+}
+#startArrows { width: 60px; margin-bottom: 30px; animation: arrowSwipeUp 2s infinite ease-in-out; }
+#startCaption { 
+    position: absolute; inset: 0; z-index: 200;
+    top: 60%; left: 50%; transform: translateX(-50%);
+    width: 70%; animation: textBreath 3s infinite ease-in-out; }
+
+/* SPONGE & OUTLINE */
+#spongeContainer {
+    position: absolute; left: 50%; top: 50%; width: 200px; height: 200px;
+    transform: translate(-50%, -50%); z-index: 150;
+    display: flex; justify-content: center; align-items: center;
+    pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+}
+#mainSponge { width: 180px; transform: rotate(-15deg); z-index: 151; }
+#spongeOutline { position: absolute; width: 150px; transform: rotate(-15deg); z-index: 152; animation: blink 1s infinite; }
+
+/* TUTORIAL ELEMENTS */
+#tutorialCaption, #tutorialArrows {
+    position: absolute; z-index: 140; left: 50%; transform: translateX(-50%);
+    transition: opacity 0.4s ease, visibility 0.4s; pointer-events: none; opacity: 0;
+}
+#tutorialArrows { bottom: 30%; width: 80px; animation: garland 1.2s infinite; }
+#tutorialCaption { bottom: 22%; width: 70%; animation: textBreath 2.5s infinite; }
+
+/* FINAL UI */
+#muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; border: 2px solid rgba(255,255,255,0.2); }
+
+/* OVERLAY (Затемнення всієї сцени в кінці) */
+#overlay { 
+    position: absolute; inset: 0; background: #000; z-index: 300; 
+    opacity: 0; transition: opacity 1s ease; pointer-events: none; 
 }
 
-#wrapper {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#container {
-    position: relative;
-    height: 100vh;
-    width: calc(100vh * 9 / 16);
-    max-width: 100vw;
-    max-height: calc(100vw * 16 / 9);
-    overflow: hidden;
-}
-
-@media (max-aspect-ratio: 9/16) {
-    #container {
-        width: 100vw;
-        height: calc(100vw * 16 / 9);
-    }
-}
-
-.bg-img,
-#canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#canvas {
-    z-index: 5;
-    filter: brightness(1.1) contrast(1.1);
-    background: transparent;
-}
-
-/* SPLASH */
-
-#splash {
-    position: absolute;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    pointer-events: auto;
-}
-
-.splash-bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 4;
-    transition: opacity .4s ease;
-}
-
-#splashSpongeContainer {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    z-index: 102;
-    animation: spongePulseGlow 3s infinite ease-in-out;
-}
-
-#splashSponge {
-    position: absolute;
-    width: 180px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotate(-15deg);
-    pointer-events: none;
-    z-index: 105;
-}
-
-#splashOutline {
-    position: absolute;
-    width: 145px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotate(-15deg);
-    animation: blink 1s infinite;
-    z-index: 110;
-    /*transition: opacity .3s ease;*/
-}
-
-#splashHand {
-    position: absolute;
-    width: 90px;
-    left: 50%;
-    top: 50%;
-    z-index: 106;
-    animation: handTapBetter 1.5s infinite ease-in-out;
-    transition: opacity .3s ease;
-}
-
-#clickLines {
-    position: absolute;
-    width: 80px;
-    left: 50%;
-    top: 50%;
-    z-index: 107;
-    pointer-events: none;
-    opacity: 0;
-    transform: scale(0);
-    animation: clickRays 1.5s infinite ease-in-out;
-    transition: opacity .3s ease;
-}
-
-#splashCaption {
-    position: absolute;
-    bottom: 22%;
-    width: 70%;
-    z-index: 108;
-    animation: captionPulse 2.5s infinite ease-in-out;
-    transition: opacity .3s ease;
-}
-
-/* GAME UI */
-
-#muteBtn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    width: 45px;
-    height: 45px;
-    background: rgba(0,0,0,.6);
-    border-radius: 50%;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 24px;
-    border: 2px solid rgba(255,255,255,.2);
-}
-
-#overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,.8);
-    z-index: 15;
-    opacity: 0;
-    transition: opacity .8s ease;
-    pointer-events: none;
+#ctaBtn { 
+    display: none; position: absolute; z-index: 320; bottom: 25%; left: 50%; 
+    width: 100%; transform: translateX(-50%); animation: pulse 1.8s infinite; 
 }
 
 #wowEffect {
-    position: absolute;
-    z-index: 20;
-    width: 40%;
-    top: 45%;
-    left: 70%;
-    transform: translate(-50%, -50%) scale(0.5); 
-    opacity: 0; 
-    
-    pointer-events: none; 
-    
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-
-}
-#ctaButton {
-    display: none;
-    position: absolute;
-    z-index: 21;
-    bottom: 15%;
-    left: 50%;
-    width: 80%;
-    transform: translateX(-50%);
-    animation: pulse 1.8s infinite;
-}
-
-#wowEffect.visible {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
-
-/* FX CANVAS */
-#fxCanvas {
-    position: absolute;
-    inset: 0;
-    z-index: 60;
+    position: absolute; z-index: 290; width: 40%; top: 45%; left: 70%;
+    transform: translate(-50%, -50%) scale(0); opacity: 0;
+    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
 }
+#wowEffect.visible { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
 
 /* ANIMATIONS */
-
-@keyframes clickRays {
-    0%,45% {
-        transform: translate(-50%, -50%) scale(0);
-        opacity: 0;
-    }
-
-    50% {
-        transform: translate(-50%, -50%) scale(1.2);
-        opacity: 1;
-    }
-
-    65% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 0;
-    }
+@keyframes arrowSwipeUp {
+    0% { transform: rotate(180deg) translateY(0px); opacity: 0; }
+    50% { transform: rotate(180deg) translateY(60px); opacity: 1; filter: brightness(1.5); }
+    100% { transform: rotate(180deg) translateY(0px); opacity: 0; }
 }
-
-@keyframes spongePulseGlow {
-    0%,100% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 0 rgba(255,255,255,0));
-    }
-
-    50% {
-        transform: scale(1.08);
-        filter: drop-shadow(0 0 20px rgba(255,255,255,.8));
-    }
+@keyframes textBreath {
+    0%, 100% { transform: translateX(-50%) scale(1); filter: brightness(1); }
+    50% { transform: translateX(-50%) scale(1.05); filter: brightness(1.2); }
 }
-
-@keyframes handTapBetter {
-    0%,100% {
-        transform: translate(40px,120px);
-        opacity: 0;
-    }
-
-    50% {
-        transform: translate(0,0);
-        opacity: 1;
-    }
-
-    70% {
-        transform: translate(0,0) scale(.85);
-        opacity: 1;
-    }
+@keyframes garland { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; filter: drop-shadow(0 0 10px white); } }
+@keyframes spongeAutoMove {
+    0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+    25% { transform: translate(-50%, -50%) translateX(-65px) rotate(-10deg); }
+    75% { transform: translate(-50%, -50%) translateX(65px) rotate(10deg); }
 }
+@keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
+@keyframes pulse { 0%, 100% { transform: translate(-50%, 0) scale(1); } 50% { transform: translate(-50%, 0) scale(1.08); } }
 
-@keyframes blink {
-    0%,100% { opacity: .3; }
-    50% { opacity: 1; }
-}
-
-@keyframes pulse {
-    0%,100% {
-        transform: translate(-50%, -50%) scale(1);
-    }
-
-    50% {
-        transform: translate(-50%, -50%) scale(1.05);
-    }
-}
-
-@keyframes captionPulse {
-    0%,100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    50% {
-        transform: scale(1.03);
-        opacity: .8;
-    }
-
-    70% {
-        opacity: 1;
-    }
-}
+.auto-move { animation: spongeAutoMove 2s infinite ease-in-out !important; }
 </style>
 </head>
 
 <body>
-<canvas id="fxCanvas"></canvas>
 <div id="wrapper">
     <div id="container">
-
-        <img id="staticPoster"
-             src="assets/poster.webp"
-             class="bg-img"
-             style="z-index:2;">
-
-        <video id="bgAnimation"
-               class="bg-img"
-               loop
-               muted
-               playsinline>
-            <source src="assets/Comp 1.webm" type="video/webm">
-        </video>
-
-        <canvas id="canvas"></canvas>
-
-        <!-- SPLASH -->
-
-        <div id="splash">
-            <div id="splashSpongeContainer">
-
-                <img src="assets/sponge_outline.webp"
-                     id="splashOutline">
-                 
-                <img src="assets/sponge.webp"
-                     id="splashSponge">
-
-                <img src="assets/click_lines.png"
-                     id="clickLines">
-
-                <img src="assets/hand-cursor.png"
-                     id="splashHand">
-
-            </div>
-
-            <img src="assets/caption.webp"
-                 id="splashCaption">
-
+        <!-- Етап 0 -->
+        <div id="startScreen">
+            <img src="assets/start_arrows.webp" id="startArrows">
+            <img src="assets/start_caption.webp" id="startCaption">
         </div>
 
-        <!-- UI -->
+        <img id="poster" src="assets/poster.webp" class="bg-img" style="z-index:1;">
+        <video id="videoBg" class="bg-img" loop muted playsinline style="z-index:2;">
+            <source src="assets/Comp 1.webm" type="video/webm">
+        </video>
+        <canvas id="canvas"></canvas>
 
-        <div id="muteBtn">🔊</div>
+        <div id="spongeContainer">
+            <img src="assets/sponge_outline.webp" id="spongeOutline">
+            <img src="assets/sponge.webp" id="mainSponge">
+        </div>
 
-        <div id="overlay"></div>
+        <!-- Стрілки з'являються тільки після свайпу і до початку тертя -->
+        <img src="assets/caption.webp" id="tutorialCaption">
 
         <img src="assets/wow.webp" id="wowEffect">
-
-        <img src="assets/button.webp" id="ctaButton">
-
+        <div id="muteBtn">🔊</div>
+        <div id="overlay"></div>
+        <img src="assets/button.webp" id="ctaBtn">
     </div>
 </div>
 
-<!-- AUDIO -->
-
-<audio id="bgMusic"
-       src="assets/music.mp3"
-       loop
-       muted
-       playsinline></audio>
-
-<audio id="soundStart"
-       src="assets/vo_start.mp3"
-       muted
-       playsinline></audio>
-
-<audio id="soundFinish"
-       src="assets/vo_finish.mp3"
-       muted
-       playsinline></audio>
-
-<audio id="soundScrub"
-       src="assets/scrub.mp3"
-       loop
-       muted
-       playsinline></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop muted playsinline></audio>
+<audio id="soundStart" src="assets/vo_start.mp3" muted playsinline></audio>
+<audio id="soundFinish" src="assets/vo_finish.mp3" muted playsinline></audio>
+<audio id="scrubSound" src="assets/scrub.mp3" loop muted playsinline></audio>
 
 <script>
-
-const fxCanvas = document.getElementById('fxCanvas');
-const fx = fxCanvas.getContext('2d');
-
-let particles = [];
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const brush = new Image(); brush.src = 'assets/sponge.webp';
 
-const brush = new Image();
-brush.src = 'assets/sponge.webp';
+let isGameStarted = false, isTutorial = false, isFinished = false, isDrawing = false;
+let startY = 0, audioUnlocked = false, lastX = null, lastY = null;
 
-let drawing = false;
-let isMuted = false;
-let gameActive = false;
-let finished = false;
+// ПЕРШИЙ КРОК: Свайп угору
+window.addEventListener('touchstart', e => { startY = e.touches[0].clientY; });
+window.addEventListener('touchend', e => {
+    let endY = e.changedTouches[0].clientY;
+    if (startY - endY > 40 && !audioUnlocked) initExperience();
+});
+window.addEventListener('mousedown', () => { if(!audioUnlocked) initExperience(); });
 
-let lastX = null;
-let lastY = null;
-
-let currentX = 0;
-let currentY = 0;
-
-let audioUnlocked = false;
-
-function unlockAudio() {
-
-    if (audioUnlocked) return;
+function initExperience() {
     audioUnlocked = true;
-
-    const sounds = [
-        document.getElementById('bgMusic'),
-        document.getElementById('soundStart'),
-        document.getElementById('soundFinish'),
-        document.getElementById('soundScrub')
-    ];
-
-    sounds.forEach(a => {
-    if (!a) return;
-    a.muted = false;
-    a.volume = 1;
-    const p = a.play();
-    if (p !== undefined) {
-        p.then(() => {
-            if (a.id !== 'bgMusic') {
-                a.pause();
-                a.currentTime = 0;
-            }
-        }).catch(() => {});
-    }
-});
-}
-function forceAudioKick() {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    gain.gain.value = 0.001;
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start();
-    osc.stop(ctx.currentTime + 0.01);
-}
-
-/* START GAME */
-
-function startGame() {
-
-    if (gameActive) return;
-
-    gameActive = true;
-
-    const video = document.getElementById('bgAnimation');
-    const poster = document.getElementById('staticPoster');
-
-    const gSponge = document.getElementById('splashSponge');
-
-    currentX = canvas.width / 2;
-    currentY = canvas.height / 2;
-
-    gSponge.style.left = currentX + 'px';
-    gSponge.style.top = currentY + 'px';
-    gSponge.style.transform =
-        'translate(-50%, -50%) rotate(-15deg)';
-
-    document.getElementById('splashSpongeContainer')
-        .style.animation = 'none';
-
-    video.play().catch(() => {});
-    video.style.opacity = '1';
-
-    //document.querySelector('.splash-bg').style.opacity = '0';
-    document.getElementById('splashCaption').style.display = 'none';
-    document.getElementById('splashOutline').style.display = 'none';
-    document.getElementById('splashHand').style.display = 'none';
-    document.getElementById('clickLines').style.display = 'none';
-    document.getElementById('splash').style.pointerEvents = 'none';
-
-    setTimeout(() => {
-        poster.style.display = 'none';
-        document.getElementById('muteBtn').style.display = 'flex';
-    }, 500);
-
-    /* AUDIO */
-
-
-    const startSound = document.getElementById('soundStart');
-
-startSound.muted = false;
-startSound.currentTime = 0;
-
-const p = startSound.play();
-
-if (p) {
-    p.catch(() => {
-        // fallback: спроба повтору
-        setTimeout(() => {
-            startSound.play().catch(() => {});
-        }, 100);
-    });
-}
-
-    ['soundFinish', 'soundScrub'].forEach(id => {
-        document.getElementById(id).muted = false;
-    });
-
-    const bgMusic = document.getElementById('bgMusic');
-    bgMusic.muted = false;
-    bgMusic.volume = 0.5; // гучність фону
-    bgMusic.currentTime = 0;
-    bgMusic.play().catch(() => {});
-}
-
-/* SPLASH TAP */
-
-document.getElementById('splash')
-.addEventListener('pointerdown', (e) => {
-
-    e.preventDefault();
-    unlockAudio();
-    forceAudioKick();
-    startGame();
-
-    drawing = true;
-
-    const r = canvas.getBoundingClientRect();
-
-    lastX = e.clientX - r.left;
-    lastY = e.clientY - r.top;
-
-    if (!isMuted) {
-
-        const soundScrub =
-            document.getElementById('soundScrub');
-
-        soundScrub.currentTime = 0;
-
-        soundScrub.play().catch(() => {});
-    }
-
-}, { passive: false });
-
-/* MOVE */
-
-function handleMove(x, y) {
-
-    if (!gameActive || finished) return;
-
-    currentX = x;
-    currentY = y;
-
-    const gSponge =
-        document.getElementById('splashSponge');
-
-    gSponge.style.left = x + 'px';
-    gSponge.style.top = y + 'px';
-
-    gSponge.style.transform =
-        'translate(-50%, -50%) rotate(-15deg)';
-
-    if (!drawing) return;
-
-    ctx.globalCompositeOperation = 'destination-out';
-
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = 'black';
-
-    if (lastX !== null) {
-
-        const dx = x - lastX;
-        const dy = y - lastY;
-
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        const steps = Math.max(1,
-            Math.floor(dist / 5));
-
-        for (let i = 0; i <= steps; i++) {
-
-            const tx = lastX + (dx * i / steps);
-            const ty = lastY + (dy * i / steps);
-
-            ctx.drawImage(
-                brush,
-                tx - 75,
-                ty - 75,
-                150,
-                150
-            );
-        }
-    }
-
-    lastX = x;
-    lastY = y;
-
-    if (Math.random() > 0.9) {
-        checkProgress();
-    }
-
-    ctx.shadowBlur = 0;
-}
-
-/* CHECK PROGRESS */
-
-function checkProgress() {
-
-    const pixels =
-        ctx.getImageData(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        ).data;
-
-    let clear = 0;
-
-    for (let i = 3; i < pixels.length; i += 400) {
-        if (pixels[i] < 150) clear++;
-    }
-
-    const pct =
-        (clear / (pixels.length / 400)) * 100;
-
-    if (pct > 80) {
-        finishGame();
-    }
-}
-
-/* FINISH */
-
-function finishGame() {
-
-    if (finished) return;
-
-    finished = true;
-
-    drawing = false;
-
-    document.getElementById('splashSponge')
-        .style.display = 'none';
     
-const center = getCanvasPos(
-    window.innerWidth / 2,
-    window.innerHeight / 2
-);
+    // Unlock Audio
+    const sounds = ['bgMusic', 'soundStart', 'soundFinish', 'scrubSound'];
+    sounds.forEach(id => {
+        const s = document.getElementById(id);
+        s.muted = false;
+        s.play().then(() => { if(id !== 'bgMusic') { s.pause(); s.currentTime = 0; } }).catch(() => {});
+    });
 
-spawnWaterDrops(center.x, center.y, 120);
+    document.getElementById('startScreen').style.opacity = '0';
+    setTimeout(() => { document.getElementById('startScreen').style.visibility = 'hidden'; }, 600);
 
-    if (!isMuted) {
-        document.getElementById('soundFinish')
-            .play()
-            .catch(() => {});
-    }
-
-    setTimeout(() => {
-        const wow = document.getElementById('wowEffect');
-        wow.classList.add('visible'); 
-
-        setTimeout(() => {
-            wow.style.animation = 'pulse 1.8s infinite';
-        }, 800); 
-    }, 500);
-
-    setTimeout(() => {
-
-        const btn =
-            document.getElementById('ctaButton');
-
-        btn.style.display = 'block';
-
-        btn.onclick = () => {
-            window.open('https://honeytoon.com/comic-video/teach-me-first?n=1', '_self');
-        };
-
-    }, 1500);
-
-    setTimeout(() => {
-
-        document.getElementById('overlay')
-            .style.opacity = '1';
-
-        document.getElementById('bgAnimation')
-            .style.filter =
-                'blur(0px) brightness(0.6)';
-
-    }, 3000);
+    // Вмикаємо навчання
+    document.getElementById('spongeContainer').style.opacity = '1';
+    document.getElementById('spongeContainer').classList.add('auto-move');
+    document.getElementById('tutorialCaption').style.opacity = '1';
+    
+    isTutorial = true;
+    document.getElementById('videoBg').play();
 }
 
-/* SCRUB SOUND */
+function startCleaning() {
+    if (isGameStarted) return;
+    isGameStarted = true;
+    isTutorial = false;
+    
+    document.getElementById('soundStart').play().catch(() => {});
 
-const soundScrub =
-    document.getElementById('soundScrub');
+    // Стрілки та напис зникають НАЗАВЖДИ після першого дотику
+    document.getElementById('tutorialCaption').style.opacity = '0';
+    setTimeout(() => {
+        document.getElementById('tutorialCaption').style.visibility = 'hidden';
+    }, 400);
 
-soundScrub.volume = 0.3;
+    document.getElementById('poster').style.display = 'none';
+    document.getElementById('muteBtn').style.display = 'flex';
+    document.getElementById('spongeContainer').classList.remove('auto-move');
+}
 
-/* CANVAS EVENTS */
-
-canvas.addEventListener('pointerdown', e => {
-
-    if (!gameActive) return;
-
-    drawing = true;
-
-    if (!isMuted) {
-
-        soundScrub.currentTime = 0;
-
-        soundScrub.play()
-            .catch(() => {});
-    }
-
-    const r = canvas.getBoundingClientRect();
-
-    lastX = e.clientX - r.left;
-    lastY = e.clientY - r.top;
-});
-
-/* MOVE */
-
+// РУХ ТА ТЕРТЯ
 window.addEventListener('pointermove', e => {
-
+    if (!audioUnlocked || isFinished) return;
     const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (canvas.width / r.width);
+    const y = (e.clientY - r.top) * (canvas.height / r.height);
 
-    handleMove(
-        e.clientX - r.left,
-        e.clientY - r.top
-    );
+    if (isDrawing) {
+        moveSponge(e.clientX - r.left, e.clientY - r.top);
+        draw(x, y);
+    } else if (isTutorial) {
+        moveSponge(e.clientX - r.left, e.clientY - r.top);
+    }
 });
 
-/* UP */
+window.addEventListener('pointerdown', e => {
+    if (!audioUnlocked || isFinished) return;
+    if (!isGameStarted) startCleaning();
+    isDrawing = true;
+    const r = canvas.getBoundingClientRect();
+    lastX = (e.clientX - r.left) * (canvas.width / r.width);
+    lastY = (e.clientY - r.top) * (canvas.height / r.height);
+    moveSponge(e.clientX - r.left, e.clientY - r.top);
+});
 
 window.addEventListener('pointerup', () => {
-
-    drawing = false;
-
-    lastX = null;
-    lastY = null;
-
-    soundScrub.pause();
+    isDrawing = false;
+    lastX = null; lastY = null;
+    document.getElementById('scrubSound').pause();
 });
 
-/* VIDEO PRELOAD */
+function moveSponge(x, y) {
+    const container = document.getElementById('spongeContainer');
+    container.classList.remove('auto-move');
+    container.style.left = x + 'px';
+    container.style.top = y + 'px';
+}
 
-window.addEventListener('load', () => {
+function draw(x, y) {
+    const sfx = document.getElementById('scrubSound');
+    if (sfx.paused) sfx.play();
 
-    const v =
-        document.getElementById('bgAnimation');
+    ctx.globalCompositeOperation = 'destination-out';
+    if (lastX !== null) {
+        const dx = x - lastX, dy = y - lastY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const steps = Math.max(1, Math.floor(dist / 5));
+        for (let i = 0; i <= steps; i++) {
+            ctx.drawImage(brush, lastX + (dx*i/steps) - 100, lastY + (dy*i/steps) - 100, 200, 200);
+        }
+    }
+    lastX = x; lastY = y;
+    if (Math.random() > 0.9) checkWin();
+}
 
-    v.muted = true;
+function checkWin() {
+    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let clear = 0;
+    for (let i = 3; i < data.length; i += 400) if (data[i] < 150) clear++;
+    if ((clear / (data.length / 400)) * 100 > 80) finishGame();
+}
 
-    v.play().catch(() => {});
-});
+function finishGame() {
+    if (isFinished) return;
+    isFinished = true;
+    
+    document.getElementById('spongeContainer').style.opacity = '0';
+    document.getElementById('scrubSound').pause();
+    document.getElementById('soundFinish').play().catch(() => {});
+
+    // Фінальна послідовність
+    setTimeout(() => {
+        document.getElementById('wowEffect').classList.add('visible');
+    }, 400);
+
+    setTimeout(() => {
+        // Затемнюємо ВСЮ сцену (overlay стоїть під кнопкою та баблом за z-index)
+        document.getElementById('overlay').style.opacity = '0.6';
+        document.getElementById('ctaBtn').style.display = 'block';
+    }, 1200);
+}
 
 function initFog() {
-    const fog = new Image();
-    fog.src = 'assets/fog.webp';
-    fog.onload = () => {
-        ctx.globalCompositeOperation = 'source-over'; 
-        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
+    const img = new Image(); img.src = 'assets/fog.webp';
+    img.onload = () => {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
 }
-
-/* RESIZE */
 
 function resize() {
-
-    canvas.width = canvas.parentElement.offsetWidth;
-    canvas.height = canvas.parentElement.offsetHeight;
-    fxCanvas.width = canvas.width;
-    fxCanvas.height = canvas.height;
+    canvas.width = 1080; canvas.height = 1920; 
     initFog();
-    const fog = new Image();
-
-    fog.src = 'assets/fog.webp';
-
-    fog.onload = () => {
-
-        ctx.drawImage(
-            fog,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
-        ctx.globalCompositeOperation = 'destination-out';
-    };
 }
-
 window.addEventListener('resize', resize);
-
+window.addEventListener('load', resize);
 resize();
 
-/* MUTE */
-
-document.getElementById('muteBtn')
-.addEventListener('pointerdown', (e) => {
-
-    e.stopPropagation();
-
-    isMuted = !isMuted;
-
-    document.querySelectorAll('audio')
-        .forEach(a => a.muted = isMuted);
-
-    document.getElementById('muteBtn')
-        .innerText = isMuted ? '🔇' : '🔊';
-});
-
-/* PARTICLES */
-
-class Drop {
-    constructor(x, y) {
-
-        this.x = x;
-        this.y = y;
-
-        const angle = Math.random() * Math.PI * 2;
-        const power = 1.5 + Math.random() * 10;
-
-        this.vx = Math.cos(angle) * power;
-        this.vy = Math.sin(angle) * power - Math.random() * 6;
-
-        this.size = 4 + Math.random() * 10;
-
-        this.gravity = 0.22;
-        this.friction = 0.98;
-
-        this.life = 1;
-        this.decay = 0.008 + Math.random() * 0.01;
-
-        // для “stretch”
-        this.prevX = x;
-        this.prevY = y;
-    }
-
-    update() {
-
-        this.prevX = this.x;
-        this.prevY = this.y;
-
-        this.vy += this.gravity;
-
-        this.x += this.vx;
-        this.y += this.vy;
-
-        this.vx *= this.friction;
-        this.vy *= this.friction;
-
-        // bounce
-        if (this.y + this.size > fxCanvas.height) {
-            this.y = fxCanvas.height - this.size;
-            this.vy *= -0.35;
-            this.vx *= 0.75;
-        }
-
-        this.life -= this.decay;
-    }
-
-    draw() {
-
-        const dx = this.x - this.prevX;
-        const dy = this.y - this.prevY;
-
-        const speed = Math.sqrt(dx * dx + dy * dy);
-
-        fx.save();
-
-        fx.translate(this.x, this.y);
-
-        // ✨ stretch по швидкості
-        fx.rotate(Math.atan2(dy, dx));
-
-        const stretch = Math.min(speed * 0.4, 6);
-
-        // основна крапля (еліпс)
-        fx.beginPath();
-
-        const alpha = Math.max(this.life, 0);
-
-        // основний колір води
-        fx.fillStyle = `rgba(120, 200, 255, ${alpha})`;
-
-        fx.ellipse(
-            0,
-            0,
-            this.size + stretch,
-            this.size * 0.65,
-            0,
-            0,
-            Math.PI * 2
-        );
-
-        fx.fill();
-
-        // 💡 highlight (блік)
-        fx.beginPath();
-        fx.fillStyle = `rgba(255,255,255,${alpha * 0.6})`;
-
-        fx.ellipse(
-            -this.size * 0.2,
-            -this.size * 0.2,
-            this.size * 0.35,
-            this.size * 0.25,
-            0,
-            0,
-            Math.PI * 2
-        );
-
-        fx.fill();
-
-        fx.restore();
-    }
-}
-
-function spawnWaterDrops(x, y, count = 80) {
-    for (let i = 0; i < count; i++) {
-        particles.push(new Drop(x, y));
-    }
-}
-
-function fxLoop() {
-
-    fx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
-
-    particles.forEach((p, i) => {
-
-        p.update();
-        p.draw();
-
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-        }
-    });
-
-    requestAnimationFrame(fxLoop);
-}
-
-fxLoop();
-
-function getCanvasPos(clientX, clientY) {
-
-    const r = fxCanvas.getBoundingClientRect();
-
-    return {
-        x: (clientX - r.left) * (fxCanvas.width / r.width),
-        y: (clientY - r.top) * (fxCanvas.height / r.height)
-    };
-}
-
-function getFxPos(clientX, clientY) {
-
-    const r = fxCanvas.getBoundingClientRect();
-
-    return {
-        x: (clientX - r.left) * (fxCanvas.width / r.width),
-        y: (clientY - r.top) * (fxCanvas.height / r.height)
-    };
-}
-
+document.getElementById('muteBtn').onclick = () => {
+    const audios = document.querySelectorAll('audio');
+    const state = !audios[0].muted;
+    audios.forEach(a => a.muted = state);
+    document.getElementById('muteBtn').innerText = state ? '🔇' : '🔊';
+};
 </script>
-
 </body>
 </html>
