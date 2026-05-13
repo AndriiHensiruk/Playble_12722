@@ -50,7 +50,7 @@
 <div id="wrapper">
     <div id="container">
         <img id="staticPoster" src="assets/poster.webp" class="bg-img" style="z-index:2;">
-        <video id="bgAnimation" class="bg-img" loop muted playsinline>
+<video id="bgAnimation" class="bg-img" loop muted playsinline webkit-playsinline x5-playsinline>
             <source src="assets/Comp 1.webm" type="video/webm">
         </video>
         <canvas id="canvas"></canvas>
@@ -102,8 +102,10 @@ const fxCanvas = document.getElementById('fxCanvas');
 
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
-            const context = new AudioContext();
-            if (context.state === 'suspended') context.resume();
+            let context;
+            try { context = new (window.AudioContext || window.webkitAudioContext)(); }
+            catch(e) { return; }
+            if (!context) return;
         }
 
         bgMusic.play().then(() => {
@@ -126,11 +128,15 @@ const fxCanvas = document.getElementById('fxCanvas');
             setTimeout(() => { soundStart.play().catch(() => {}); }, 100);
         }
 
-        video.play().catch(() => { 
-            video.muted = true; 
-            video.play(); 
-        });
-
+       video.muted = true;
+            video.setAttribute('playsinline', '');
+            video.setAttribute('webkit-playsinline', '');
+            const playPromise = video.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {           
+                    setTimeout(() => { video.muted = true; video.play().catch(() => {}); }, 200);
+                });
+            }
         document.getElementById('splashCaption').style.display = 'none';
         document.getElementById('splashOutline').style.display = 'none';
         document.getElementById('splashHand').style.display = 'none';
