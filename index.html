@@ -166,6 +166,7 @@ function handleMove(x, y) {
             const tx = lastX + (dx * i / steps);
             const ty = lastY + (dy * i / steps);
             ctx.drawImage(brush, tx - 75, ty - 75, 150, 150);
+            
         }
     }
     lastX = x; lastY = y;
@@ -193,7 +194,7 @@ function finishGame() {
     if (!isMuted) document.getElementById('soundFinish').play().catch(() => {});
 
     setTimeout(() => {
-        document.getElementById('overlay').style.opacity = '0.6';
+        document.getElementById('overlay').style.opacity = '0.3';
         document.getElementById('bgAnimation').style.filter = 'blur(4px) brightness(0.4)';
         document.getElementById('wowEffect').classList.add('visible'); 
     }, 400);
@@ -209,9 +210,14 @@ function initFog() {
     const fog = new Image();
     fog.src = 'assets/fog.webp';
     fog.onload = () => {
-        ctx.globalCompositeOperation = 'source-over'; 
-        ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
-    };
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(fog, 0, 0, canvas.width, canvas.height);
+    ctx.globalCompositeOperation = 'screen';
+    ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.globalCompositeOperation = 'source-over';
+};
 }
 
 function resize() {
