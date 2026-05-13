@@ -15,20 +15,28 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
 .bg-img, #canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 #canvas { z-index: 10; background: transparent; }
 
-/* START SCREEN (Swipe Up) */
+/* START SCREEN */
 #startScreen {
     position: absolute; inset: 0; z-index: 200;
     background: rgba(0,0,0,0.75);
     display: flex; flex-direction: column; justify-content: center; align-items: center;
     transition: opacity 0.6s ease;
 }
-#startArrows { width: 60px; margin-bottom: 30px; animation: arrowSwipeUp 2s infinite ease-in-out; }
+#startArrows { width: 60px; margin-bottom: 20px; margin-bottom: 0%; animation: arrowSwipeUp 2s infinite ease-in-out; }
 #startCaption { 
-    position: absolute; inset: 0; z-index: 200;
-    top: 60%; left: 50%; transform: translateX(-50%);
-    width: 70%; animation: textBreath 3s infinite ease-in-out; }
+    position: absolute;
+    top: 30%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    width: 60%; 
+    animation: textBreath 3s infinite ease-in-out; 
+}
+#startBtn { 
+    margin-bottom: -70%; 
+    left: 50%; 
+    width: 100%; cursor: pointer; animation: pulse 1.5s infinite; }
 
-/* SPONGE & OUTLINE */
+/* SPONGE & HAND */
 #spongeContainer {
     position: absolute; left: 50%; top: 50%; width: 200px; height: 200px;
     transform: translate(-50%, -50%); z-index: 150;
@@ -37,55 +45,43 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
 }
 #mainSponge { width: 180px; transform: rotate(-15deg); z-index: 151; }
 #spongeOutline { position: absolute; width: 150px; transform: rotate(-15deg); z-index: 152; animation: blink 1s infinite; }
-
-/* TUTORIAL ELEMENTS */
-#tutorialCaption, #tutorialArrows {
-    position: absolute; z-index: 140; left: 50%; transform: translateX(-50%);
-    transition: opacity 0.4s ease, visibility 0.4s; pointer-events: none; opacity: 0;
+#tutorialHand { 
+    position: absolute; width: 60px; top: 60%; left: 60%; z-index: 155; 
+    pointer-events: none; transition: opacity 0.3s ease; 
 }
-#tutorialArrows { bottom: 30%; width: 80px; animation: garland 1.2s infinite; }
-#tutorialCaption { bottom: 22%; width: 70%; animation: textBreath 2.5s infinite; }
 
-/* FINAL UI */
+#tutorialCaption {
+    position: absolute; z-index: 140; left: 50%; bottom: 22%; transform: translateX(-50%);
+    width: 70%; transition: opacity 0.4s ease, visibility 0.4s; pointer-events: none; 
+    opacity: 0; animation: textBreath 2.5s infinite;
+}
+
 #muteBtn { position: absolute; top: 20px; right: 20px; z-index: 1000; width: 45px; height: 45px; background: rgba(0,0,0,.6); border-radius: 50%; display: none; justify-content: center; align-items: center; color: white; border: 2px solid rgba(255,255,255,0.2); }
+#overlay { position: absolute; inset: 0; background: #000; z-index: 300; opacity: 0; transition: opacity 1s ease; pointer-events: none; }
 
-/* OVERLAY (Затемнення всієї сцени в кінці) */
-#overlay { 
-    position: absolute; inset: 0; background: #000; z-index: 300; 
-    opacity: 0; transition: opacity 1s ease; pointer-events: none; 
-}
+/* ФІНАЛЬНА КНОПКА */
+#ctaBtn { display: none; position: absolute; z-index: 320; bottom: 25%; left: 50%; width: 100%; transform: translateX(-50%); animation: pulseCTA 1.8s infinite; }
 
-#ctaBtn { 
-    display: none; position: absolute; z-index: 320; bottom: 25%; left: 50%; 
-    width: 100%; transform: translateX(-50%); animation: pulse 1.8s infinite; 
-}
-
-#wowEffect {
-    position: absolute; z-index: 290; width: 40%; top: 45%; left: 70%;
-    transform: translate(-50%, -50%) scale(0); opacity: 0;
-    transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: none;
-}
+#wowEffect { position: absolute; z-index: 290; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%) scale(0); opacity: 0; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
 #wowEffect.visible { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
 
-/* ANIMATIONS */
 @keyframes arrowSwipeUp {
-    0% { transform: rotate(180deg) translateY(0px); opacity: 0; }
-    50% { transform: rotate(180deg) translateY(60px); opacity: 1; filter: brightness(1.5); }
-    100% { transform: rotate(180deg) translateY(0px); opacity: 0; }
+    0% { transform:  translateY(10px); opacity: 1; }
+    50% { transform:  translateY(-100px); opacity: 0; }
+    100% { transform:  translateY(10px); opacity: 1; }
 }
 @keyframes textBreath {
-    0%, 100% { transform: translateX(-50%) scale(1); filter: brightness(1); }
-    50% { transform: translateX(-50%) scale(1.05); filter: brightness(1.2); }
+    0%, 100% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
 }
-@keyframes garland { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; filter: drop-shadow(0 0 10px white); } }
 @keyframes spongeAutoMove {
     0%, 100% { transform: translate(-50%, -50%) translateX(0); }
-    25% { transform: translate(-50%, -50%) translateX(-65px) rotate(-10deg); }
-    75% { transform: translate(-50%, -50%) translateX(65px) rotate(10deg); }
+    25% { transform: translate(-50%, -50%) translateX(-30px) rotate(-5deg); }
+    75% { transform: translate(-50%, -50%) translateX(30px) rotate(5deg); }
 }
 @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
-@keyframes pulse { 0%, 100% { transform: translate(-50%, 0) scale(1); } 50% { transform: translate(-50%, 0) scale(1.08); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+@keyframes pulseCTA { 0%, 100% { transform: translate(-50%, 0) scale(1); } 50% { transform: translate(-50%, 0) scale(1.08); } }
 
 .auto-move { animation: spongeAutoMove 2s infinite ease-in-out !important; }
 </style>
@@ -94,10 +90,11 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
 <body>
 <div id="wrapper">
     <div id="container">
-        <!-- Етап 0 -->
+        <!-- Перший екран з базовою кнопкою -->
         <div id="startScreen">
             <img src="assets/start_arrows.webp" id="startArrows">
             <img src="assets/start_caption.webp" id="startCaption">
+            <img src="assets/button.webp" id="startBtn" onclick="initExperience()">
         </div>
 
         <img id="poster" src="assets/poster.webp" class="bg-img" style="z-index:1;">
@@ -109,15 +106,16 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
         <div id="spongeContainer">
             <img src="assets/sponge_outline.webp" id="spongeOutline">
             <img src="assets/sponge.webp" id="mainSponge">
+            <img src="assets/hand.webp" id="tutorialHand">
         </div>
 
-        <!-- Стрілки з'являються тільки після свайпу і до початку тертя -->
         <img src="assets/caption.webp" id="tutorialCaption">
-
         <img src="assets/wow.webp" id="wowEffect">
         <div id="muteBtn">🔊</div>
         <div id="overlay"></div>
-        <img src="assets/button.webp" id="ctaBtn">
+        
+        <!-- ОНОВЛЕНА ФІНАЛЬНА КНОПКА -->
+            <img src="assets/final_button.webp" id="ctaBtn" onclick="window.location.href='https://honeytoon.com/comic-video/teach-me-first?n=1'">
     </div>
 </div>
 
@@ -130,22 +128,21 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d', { willReadFrequently: true });
 const brush = new Image(); brush.src = 'assets/sponge.webp';
-
+const outline = document.getElementById('spongeOutline');
+const hand = document.getElementById('tutorialHand');
 let isGameStarted = false, isTutorial = false, isFinished = false, isDrawing = false;
 let startY = 0, audioUnlocked = false, lastX = null, lastY = null;
 
-// ПЕРШИЙ КРОК: Свайп угору
 window.addEventListener('touchstart', e => { startY = e.touches[0].clientY; });
 window.addEventListener('touchend', e => {
     let endY = e.changedTouches[0].clientY;
     if (startY - endY > 40 && !audioUnlocked) initExperience();
 });
-window.addEventListener('mousedown', () => { if(!audioUnlocked) initExperience(); });
 
 function initExperience() {
+    if(audioUnlocked) return;
     audioUnlocked = true;
     
-    // Unlock Audio
     const sounds = ['bgMusic', 'soundStart', 'soundFinish', 'scrubSound'];
     sounds.forEach(id => {
         const s = document.getElementById(id);
@@ -156,7 +153,6 @@ function initExperience() {
     document.getElementById('startScreen').style.opacity = '0';
     setTimeout(() => { document.getElementById('startScreen').style.visibility = 'hidden'; }, 600);
 
-    // Вмикаємо навчання
     document.getElementById('spongeContainer').style.opacity = '1';
     document.getElementById('spongeContainer').classList.add('auto-move');
     document.getElementById('tutorialCaption').style.opacity = '1';
@@ -171,27 +167,21 @@ function startCleaning() {
     isTutorial = false;
     
     document.getElementById('soundStart').play().catch(() => {});
-
-    // Стрілки та напис зникають НАЗАВЖДИ після першого дотику
+    hand.style.opacity = '0';
     document.getElementById('tutorialCaption').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('tutorialCaption').style.visibility = 'hidden';
-    }, 400);
-
+    
     document.getElementById('poster').style.display = 'none';
     document.getElementById('muteBtn').style.display = 'flex';
     document.getElementById('spongeContainer').classList.remove('auto-move');
 }
 
-// РУХ ТА ТЕРТЯ
 window.addEventListener('pointermove', e => {
     if (!audioUnlocked || isFinished) return;
     const r = canvas.getBoundingClientRect();
-    const x = (e.clientX - r.left) * (canvas.width / r.width);
-    const y = (e.clientY - r.top) * (canvas.height / r.height);
-
     if (isDrawing) {
         moveSponge(e.clientX - r.left, e.clientY - r.top);
+        const x = (e.clientX - r.left) * (canvas.width / r.width);
+        const y = (e.clientY - r.top) * (canvas.height / r.height);
         draw(x, y);
     } else if (isTutorial) {
         moveSponge(e.clientX - r.left, e.clientY - r.top);
@@ -202,6 +192,7 @@ window.addEventListener('pointerdown', e => {
     if (!audioUnlocked || isFinished) return;
     if (!isGameStarted) startCleaning();
     isDrawing = true;
+    outline.style.opacity = '0';    
     const r = canvas.getBoundingClientRect();
     lastX = (e.clientX - r.left) * (canvas.width / r.width);
     lastY = (e.clientY - r.top) * (canvas.height / r.height);
@@ -211,6 +202,7 @@ window.addEventListener('pointerdown', e => {
 window.addEventListener('pointerup', () => {
     isDrawing = false;
     lastX = null; lastY = null;
+    if (!isFinished) outline.style.opacity = '1';
     document.getElementById('scrubSound').pause();
 });
 
@@ -248,18 +240,12 @@ function checkWin() {
 function finishGame() {
     if (isFinished) return;
     isFinished = true;
-    
     document.getElementById('spongeContainer').style.opacity = '0';
     document.getElementById('scrubSound').pause();
     document.getElementById('soundFinish').play().catch(() => {});
 
-    // Фінальна послідовність
+    setTimeout(() => { document.getElementById('wowEffect').classList.add('visible'); }, 400);
     setTimeout(() => {
-        document.getElementById('wowEffect').classList.add('visible');
-    }, 400);
-
-    setTimeout(() => {
-        // Затемнюємо ВСЮ сцену (overlay стоїть під кнопкою та баблом за z-index)
         document.getElementById('overlay').style.opacity = '0.6';
         document.getElementById('ctaBtn').style.display = 'block';
     }, 1200);
@@ -270,7 +256,7 @@ function initFog() {
     img.onload = () => {
         ctx.globalCompositeOperation = 'source-over';
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
 }
 
