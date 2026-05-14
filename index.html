@@ -28,13 +28,13 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
     top: 40%; 
     left: 50%; 
     transform: translate(-50%, -50%); 
-    width: 60%; 
+    width: 70%; 
     animation: textBreath 3s infinite ease-in-out; 
 }
 #startBtn { 
     margin-bottom: -70%; 
     left: 50%; 
-    width: 90%; cursor: pointer; animation: pulse 1.5s infinite; }
+    width: 70%; cursor: pointer; animation: pulse 2.5s infinite; }
 
 /* SPONGE & HAND */
 #spongeContainer {
@@ -74,9 +74,9 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
 }
 
 @keyframes arrowSwipeUp {
-    0% { transform:  translateY(80px); opacity: 1; }
-    50% { transform:  translateY(60px); opacity: 0; }
-    100% { transform:  translateY(80px); opacity: 1; }
+    0% { transform:  translateY(50px); opacity: 1; }
+    50% { transform:  translateY(1px); opacity: 0; }
+    100% { transform:  translateY(50px); opacity: 1; }
 }
 @keyframes textBreath {
     0%, 100% { transform: translateX(-50%) scale(1); }
@@ -148,7 +148,10 @@ window.addEventListener('touchend', e => {
 function initExperience() {
     if(audioUnlocked) return;
     audioUnlocked = true;
-    
+    isDrawing = false;
+    lastX = null;
+    lastY = null;
+
     const sounds = ['bgMusic', 'soundStart', 'soundFinish', 'scrubSound'];
     sounds.forEach(id => {
         const s = document.getElementById(id);
@@ -184,21 +187,33 @@ function startCleaning() {
 window.addEventListener('pointermove', e => {
     if (!audioUnlocked || isFinished) return;
     const r = canvas.getBoundingClientRect();
+
+     if (isDrawing && e.buttons === 0) {
+        isDrawing = false;
+        if (!isFinished) outline.style.display = 'block';
+        document.getElementById('scrubSound').pause();
+    }
+
     if (isDrawing) {
         moveSponge(e.clientX - r.left, e.clientY - r.top);
         const x = (e.clientX - r.left) * (canvas.width / r.width);
         const y = (e.clientY - r.top) * (canvas.height / r.height);
         draw(x, y);
-    } else if (isTutorial) {
-        moveSponge(e.clientX - r.left, e.clientY - r.top);
-    }
+    } 
+});
+
+window.addEventListener('pointercancel', () => {
+    isDrawing = false;
+    if (!isFinished) outline.style.display = 'block';
+    document.getElementById('scrubSound').pause();
 });
 
 window.addEventListener('pointerdown', e => {
     if (!audioUnlocked || isFinished) return;
+    if (e.target.tagName === 'IMG' && e.target.id !== 'canvas') return;
     if (!isGameStarted) startCleaning();
     isDrawing = true;
-    outline.style.opacity = '0';    
+    outline.style.display = 'none';
     const r = canvas.getBoundingClientRect();
     lastX = (e.clientX - r.left) * (canvas.width / r.width);
     lastY = (e.clientY - r.top) * (canvas.height / r.height);
@@ -208,7 +223,7 @@ window.addEventListener('pointerdown', e => {
 window.addEventListener('pointerup', () => {
     isDrawing = false;
     lastX = null; lastY = null;
-    if (!isFinished) outline.style.opacity = '1';
+    if (!isFinished) outline.style.display = 'block';
     document.getElementById('scrubSound').pause();
 });
 
@@ -223,6 +238,8 @@ function draw(x, y) {
     const sfx = document.getElementById('scrubSound');
     if (sfx.paused) sfx.play();
 
+    outline.style.opacity = '0';
+    
     ctx.globalCompositeOperation = 'destination-out';
     if (lastX !== null) {
         const dx = x - lastX, dy = y - lastY;
