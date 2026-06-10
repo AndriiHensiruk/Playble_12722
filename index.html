@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Shower Playable 12722</title>
+<title>Shower Playable 13985</title>
 
 <style>
 html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-action: none; font-family: sans-serif; }
@@ -61,8 +61,8 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
 
 #ctaBtn { display: none; position: absolute; z-index: 320; bottom: 25%; left: 50%; width: 100%; transform: translateX(-50%); animation: pulseCTA 1.8s infinite; }
 
-#wowEffect { position: absolute; z-index: 290; width: 40%; top: 45%; left: 70%; transform: translate(-50%, -50%) scale(0); opacity: 0; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
-#wowEffect.visible { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+#wowEffect { position: absolute; z-index: 290; width: 40%; top: 50%; left: 70%; transform: translate(-50%, -50%) scale(0); opacity: 0; transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
+#wowEffect.visible { transform: translate(-50%, -50%) scale(0.9); opacity: 1; }
 
 #particleCanvas {
     position: absolute;
@@ -121,7 +121,7 @@ html, body { margin: 0; padding: 0; overflow: hidden; background: #000; touch-ac
         <img src="assets/wow.webp" id="wowEffect">
         <div id="muteBtn">🔊</div>
         <div id="overlay"></div>
-            <img src="assets/final_button.webp" id="ctaBtn" onclick="window.location.href='https://honeytoon.com/comic-video/teach-me-first?n=1'">
+            <img src="assets/final_button.webp" id="ctaBtn" onclick="window.location.href='https://honeytoon.com/comic-video/spring-break-with-stepsister?n=1'">
     </div>
 </div>
 
@@ -308,22 +308,19 @@ class Particle {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        // Випадковий розмір краплі
         this.radius = Math.random() * 4 + 2;
-        // Випадкова швидкість у різні боки
         this.speedX = (Math.random() - 0.5) * 15;
         this.speedY = (Math.random() - 0.5) * 15;
-        // Блакитний колір води з прозорістю
         this.color = `rgba(173, 216, 230, ${Math.random() * 0.5 + 0.5})`;
-        this.gravity = 0.2; // Сила тяжіння, щоб краплі падали
-        this.life = 100;    // "Життя" частинки
+        this.gravity = 0.2; 
+        this.life = 100;  
     }
 
     update() {
         this.x += this.speedX;
         this.y += this.speedY;
         this.speedY += this.gravity; 
-        this.life -= 1.5; // Частинка поступово зникає
+        this.life -= 1.5; 
     }
 
     draw() {
